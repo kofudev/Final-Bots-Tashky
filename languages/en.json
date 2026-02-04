@@ -1,0 +1,341 @@
+{
+  "meta": {
+    "name": "English",
+    "code": "en",
+    "flag": "🇬🇧",
+    "author": "Kofu",
+    "version": "1.0.0",
+    "lastUpdated": "2026-02-04"
+  },
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "unknown": "Unknown",
+    "none": "None",
+    "loading": "Loading...",
+    "processing": "Processing...",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "continue": "Continue",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "open": "Open"
+  },
+  "errors": {
+    "noPermission": "❌ You don't have permission to use this command!",
+    "botNoPermission": "❌ I don't have the necessary permissions to perform this action!",
+    "userNotFound": "❌ User not found!",
+    "channelNotFound": "❌ Channel not found!",
+    "roleNotFound": "❌ Role not found!",
+    "guildNotFound": "❌ Server not found!",
+    "invalidArguments": "❌ Invalid arguments! Use `/help {command}` for more info.",
+    "cooldown": "⏳ Slow down! Wait **{time}** more seconds before using this command again.",
+    "ownerOnly": "👑 This command is reserved for bot owners (Kofu & co).",
+    "guildOnly": "❌ This command can only be used on a server!",
+    "dmOnly": "❌ This command can only be used in direct messages!",
+    "maintenance": "🔧 The bot is currently under maintenance. Try again later!",
+    "missingPermissions": "❌ Missing permissions: {permissions}",
+    "botMissingPermissions": "❌ I don't have permissions: {permissions}",
+    "hierarchyError": "❌ You cannot perform this action on someone with a role equal or higher than yours!",
+    "botHierarchyError": "❌ I cannot perform this action on someone with a role equal or higher than mine!",
+    "selfAction": "❌ You cannot perform this action on yourself!",
+    "botAction": "❌ You cannot perform this action on me!",
+    "ownerAction": "❌ You cannot perform this action on the server owner!",
+    "alreadyBanned": "❌ This user is already banned!",
+    "notBanned": "❌ This user is not banned!",
+    "alreadyMuted": "❌ This user is already muted!",
+    "notMuted": "❌ This user is not muted!",
+    "databaseError": "❌ Database error! Try again later.",
+    "apiError": "❌ Discord API error! Try again later.",
+    "unknownError": "❌ An unknown error occurred! Contact support."
+  },
+  "success": {
+    "commandExecuted": "✅ Command executed successfully!",
+    "userBanned": "🔨 **{user}** has been banned successfully!",
+    "userKicked": "👢 **{user}** has been kicked successfully!",
+    "userMuted": "🔇 **{user}** has been muted successfully!",
+    "userUnmuted": "🔊 **{user}** can now speak!",
+    "userWarned": "⚠️ **{user}** received a warning!",
+    "userUnbanned": "✅ **{user}** has been unbanned successfully!",
+    "configUpdated": "⚙️ Configuration updated successfully!",
+    "ticketCreated": "🎫 Your ticket has been created: {channel}",
+    "ticketClosed": "🔒 Ticket closed successfully!",
+    "messagesSent": "📨 {count} message(s) sent!",
+    "messagesDeleted": "🗑️ {count} message(s) deleted!",
+    "roleAdded": "✅ Role **{role}** added to **{user}**!",
+    "roleRemoved": "✅ Role **{role}** removed from **{user}**!",
+    "channelCreated": "✅ Channel **{channel}** created!",
+    "channelDeleted": "✅ Channel **{channel}** deleted!",
+    "settingsSaved": "💾 Settings saved!",
+    "backupCreated": "💾 Backup created successfully!",
+    "dataImported": "📥 Data imported successfully!",
+    "dataExported": "📤 Data exported successfully!"
+  },
+  "info": {
+    "processing": "⏳ Processing...",
+    "loading": "⏳ Loading...",
+    "thinking": "🤔 Thinking...",
+    "calculating": "🧮 Calculating...",
+    "searching": "🔍 Searching...",
+    "connecting": "🔗 Connecting...",
+    "downloading": "📥 Downloading...",
+    "uploading": "📤 Uploading...",
+    "saving": "💾 Saving...",
+    "deleting": "🗑️ Deleting..."
+  },
+  "commands": {
+    "general": {
+      "category": "📋 General",
+      "description": "General commands available to everyone",
+      "ping": {
+        "description": "🏓 Check bot latency",
+        "pong": "🏓 Pong! Calculating latency...",
+        "result": "🏓 Pong!\n\n**TASHKY Bot Latencies**\n\n🌐 **WebSocket:** `{ws}ms`\n📡 **Discord API:** `{api}ms`\n📊 **Quality:** {quality}\n\n*Bot developed with ❤️ by Kofu*",
+        "quality": {
+          "excellent": "🟢 Excellent",
+          "good": "🟡 Good",
+          "poor": "🔴 Poor"
+        }
+      },
+      "help": {
+        "description": "📚 Display bot help",
+        "title": "📚 TASHKY Bot - User Guide",
+        "description_text": "**Welcome to TASHKY Bot help!** 🎉\n\n🤖 **Multifunction bot** created with passion by **Kofu**\n✨ **Human code**, readable and well commented\n🛡️ **Advanced moderation**, tickets, logs and much more!\n\n**Use the menu below to explore categories** 👇",
+        "commandNotFound": "The command `/{command}` doesn't exist.\n\nUse `/help` to see all available commands.",
+        "categorySelect": "📂 Select a category...",
+        "noCommands": "No commands available in this category at the moment."
+      },
+      "botinfo": {
+        "description": "🤖 Complete information about TASHKY Bot",
+        "title": "🤖 TASHKY Bot - Complete Information",
+        "description_text": "**Discord multifunction bot made with ❤️ by Kofu**\n\n✨ Human, readable and passionate code\n🛡️ Advanced moderation and ticket system\n👑 Ultra-powerful owner panel\n🌐 Multilingual support (FR/EN)"
+      },
+      "serverinfo": {
+        "description": "🏛️ Complete server information",
+        "title": "🏛️ Server Information",
+        "owner": "👑 Owner",
+        "members": "👥 Members",
+        "channels": "📺 Channels",
+        "roles": "🎭 Roles",
+        "boost": "🚀 Nitro Boost",
+        "security": "🔒 Security",
+        "features": "⚡ Features"
+      },
+      "language": {
+        "description": "🌐 Change bot language on this server",
+        "title": "🌐 Language Configuration",
+        "current": "**Current language:** {language}",
+        "select": "Select a language from the menu below to change the bot language on this server.",
+        "updated": "Bot language has been changed to **{language}** on this server.",
+        "alreadySet": "Language **{language}** is already configured on this server.",
+        "placeholder": "🌐 Select a language..."
+      }
+    },
+    "moderation": {
+      "category": "🛡️ Moderation",
+      "description": "Tools to moderate your server",
+      "ban": {
+        "description": "🔨 Ban a server member",
+        "success": "**{user}** has been banned from the server.",
+        "reason": "📝 Reason",
+        "moderator": "🛡️ Moderator",
+        "deleteMessages": "🗑️ Messages deleted",
+        "notification": {
+          "title": "🔨 You have been banned!",
+          "description": "You have been banned from server **{guild}**.",
+          "server": "🏛️ Server",
+          "date": "📅 Date"
+        }
+      },
+      "kick": {
+        "description": "👢 Kick a server member",
+        "success": "**{user}** has been kicked from the server.",
+        "canReturn": "🔄 Can return",
+        "notification": {
+          "title": "👢 You have been kicked!",
+          "description": "You have been kicked from server **{guild}**.",
+          "info": "You can return to the server with a new invitation."
+        }
+      },
+      "warn": {
+        "description": "⚠️ Warn a member",
+        "success": "**{user}** received a warning.",
+        "count": "⚠️ Number of warns",
+        "warnId": "🆔 Warn ID",
+        "attention": "🚨 Attention!",
+        "attentionText": "This user now has **{count}** warning(s). Consider more severe sanctions.",
+        "notification": {
+          "title": "⚠️ You received a warning!",
+          "description": "You received a warning on server **{guild}**.",
+          "attentionText": "You now have **{count}** warning(s). Be careful with your behavior to avoid more severe sanctions."
+        }
+      },
+      "clear": {
+        "description": "🗑️ Bulk delete messages",
+        "success": "**{deleted}** message(s) have been deleted successfully.",
+        "requested": "📊 Messages requested",
+        "deleted": "🗑️ Messages deleted",
+        "targetUser": "👤 Target user",
+        "filter": "🔍 Applied filter",
+        "noMessages": "No messages matching the criteria were found.",
+        "filters": {
+          "bots": "🤖 Bots only",
+          "humans": "👤 Humans only",
+          "links": "🔗 With links",
+          "files": "📎 With files",
+          "pinned": "📌 Pinned messages"
+        }
+      }
+    },
+    "tickets": {
+      "category": "🎫 Tickets",
+      "description": "Complete ticket system with transcriptions",
+      "setup": {
+        "description": "🎫 Configure the ticket system",
+        "title": "🎫 Ticket System Configuration",
+        "success": "The ticket system has been successfully configured on this server.",
+        "category": "📁 Category",
+        "logs": "📝 Logs",
+        "staffRole": "👥 Staff Role",
+        "configuration": "⚙️ Configuration",
+        "createPanel": "🎫 Create Panel",
+        "testSystem": "🧪 Test System",
+        "advancedConfig": "⚙️ Advanced Config"
+      },
+      "panel": {
+        "title": "🎫 Ticket System - TASHKY Bot",
+        "description": "**Need help? Create a ticket!** 🆘\n\n🛠️ **Technical Support** - Technical problems and bugs\n🚨 **Report** - Report a user or problem\n❓ **Other** - Other requests\n\n**Click a button below to create your ticket** 👇\n\n*One ticket per user at a time*",
+        "support": "Technical Support",
+        "report": "Report",
+        "other": "Other"
+      }
+    },
+    "owner": {
+      "category": "👑 Owner",
+      "description": "Commands reserved for bot owners",
+      "panel": {
+        "description": "👑 [OWNER] Total bot control panel",
+        "title": "👑 OWNER PANEL - Total Control",
+        "description_text": "**Welcome to TASHKY Bot control panel!** 🚀\n\n⚠️ **WARNING:** This panel gives access to EXTREMELY powerful features.\n🔒 **Security:** All actions are logged and tracked.\n\n**Use the menu below to navigate** 👇",
+        "stats": "📊 Global Statistics",
+        "performance": "⚡ System Performance",
+        "ownerInfo": "🔧 Owner Information",
+        "emergencyStop": "🚨 EMERGENCY STOP",
+        "reloadAll": "🔄 Reload All",
+        "backupAll": "💾 Global Backup",
+        "recentLogs": "📝 Recent Logs"
+      },
+      "alluserinfo": {
+        "description": "📊 [OWNER] Get ALL information about a user",
+        "title": "📊 Complete Information - {user}",
+        "pages": {
+          "general": "**Page 1/6 - General Information** 🪪",
+          "servers": "**Page 2/6 - Servers** 🏛️",
+          "moderation": "**Page 3/6 - Moderation & Security** 🚨",
+          "activity": "**Page 4/6 - Activity** 📊",
+          "advanced": "**Page 5/6 - Technical Information** 🔬",
+          "summary": "**Page 6/6 - General Summary** 📋"
+        },
+        "navigation": {
+          "first": "⏮️ First",
+          "previous": "◀️ Previous",
+          "next": "Next ▶️",
+          "last": "Last ⏭️"
+        }
+      },
+      "eval": {
+        "description": "⚠️ [OWNER] Execute JavaScript code",
+        "title": "⚠️ JavaScript Code Execution",
+        "processing": "🔄 **Processing...**",
+        "success": "✅ Code Executed Successfully",
+        "error": "❌ Execution Error",
+        "silent": "Code executed in silent mode",
+        "executedBy": "👤 Executed by",
+        "mode": "⚡ Mode",
+        "executionTime": "⏱️ Execution time",
+        "returnType": "📊 Return type",
+        "result": "📤 Result",
+        "errorType": "🏷️ Error type",
+        "stackTrace": "📚 Stack Trace"
+      }
+    }
+  },
+  "events": {
+    "guildCreate": {
+      "welcome": {
+        "title": "🎉 Thanks for adding TASHKY Bot!",
+        "description": "**Hello {guild}!** 👋\n\nI'm **TASHKY Bot**, a multifunction Discord bot created with ❤️ by **Kofu**.\n\n🛡️ **Advanced moderation** - Ban, kick, warn, clear and more!\n🎫 **Ticket system** - Professional client support\n📊 **Detailed logs** - Track everything that happens\n🌐 **Multilingual** - French and English supported\n⚙️ **Customizable** - Adapt me to your needs\n\n**Start by using `/help` to discover all my features!** 🚀",
+        "quickStart": "🚀 Quick Start",
+        "quickStartText": "• `/help` - See all commands\n• `/language` - Change language\n• `/ticket-setup` - Configure tickets\n• `/config` - Configure bot",
+        "statistics": "📊 Statistics",
+        "usefulLinks": "🔗 Useful Links",
+        "usefulLinksText": "[📖 Documentation](https://github.com/kofudev/tashky-bot)\n[💬 Support](https://discord.gg/support)\n[⭐ GitHub](https://github.com/kofudev)",
+        "buttons": {
+          "guide": "📚 Getting Started Guide",
+          "config": "⚙️ Configuration",
+          "support": "💬 Support",
+          "github": "⭐ GitHub"
+        }
+      }
+    }
+  },
+  "moderation": {
+    "logs": {
+      "memberBanned": "🔨 Member Banned",
+      "memberKicked": "👢 Member Kicked",
+      "memberWarned": "⚠️ Member Warned",
+      "messagesDeleted": "🗑️ Messages Deleted",
+      "user": "👤 User",
+      "moderator": "🛡️ Moderator",
+      "reason": "📝 Reason",
+      "date": "📅 Date",
+      "channel": "📺 Channel",
+      "count": "📊 Count",
+      "duration": "⏱️ Duration"
+    },
+    "autoSanctions": {
+      "autoTimeout": "Auto-sanction applied!",
+      "autoTimeoutText": "**{user}** has been automatically timed out for 10 minutes after **{warns}** warnings.",
+      "autoBan": "Auto-sanction applied!",
+      "autoBanText": "**{user}** has been automatically banned after **{warns}** warnings."
+    }
+  },
+  "tickets": {
+    "welcome": "Thanks for creating a ticket! A staff member will respond to you soon. 🎫",
+    "categories": {
+      "support": {
+        "name": "🛠️ Technical Support",
+        "description": "Technical problems and bugs"
+      },
+      "report": {
+        "name": "🚨 Report",
+        "description": "Report a user or problem"
+      },
+      "other": {
+        "name": "❓ Other",
+        "description": "Other requests"
+      }
+    }
+  },
+  "kofu": {
+    "signature": "✨ Made with ❤️ by Kofu",
+    "credits": "Developed by Kofu - github.com/kofudev",
+    "thanks": "Thanks for using TASHKY Bot! ❤️",
+    "support": "Need help? Join the support server: {link}",
+    "github": "Source code available on GitHub: {link}",
+    "version": "Version {version} - {date}",
+    "footer": "✨ Made with ❤️ by Kofu | TASHKY Bot v{version}"
+  }
+}
