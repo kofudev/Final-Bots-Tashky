@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-robot me-2"></i>
+                TASHKY Bot
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i>
+                            Accueil
+                        </a>
+                    </li>
+                    <% if (user) { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dashboard">
+                                <i class="fas fa-tachometer-alt me-1"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <% if (isOwner) { %>
+                            <li class="nav-item">
+                                <a class="nav-link text-warning" href="/owner">
+                                    <i class="fas fa-crown me-1"></i>
+                                    Owner Panel
+                                </a>
+                            </li>
+                        <% } %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">
+                                <i class="fas fa-sign-out-alt me-1"></i>
+                                Déconnexion
+                            </a>
+                        </li>
+                    <% } else { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">
+                                <i class="fab fa-discord me-1"></i>
+                                Connexion Discord
+                            </a>
+                        </li>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container text-center py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">
+                        🤖 TASHKY Bot
+                        <small class="d-block text-muted fs-5 mt-2">Ultimate Edition</small>
+                    </h1>
+                    <p class="lead mb-4">
+                        Bot Discord multifonction créé avec ❤️ par <strong>Kofu</strong>
+                    </p>
+                    <p class="mb-4">
+                        🛡️ Modération avancée • 🎫 Système de tickets • 📊 Logs détaillés • 🌐 Multilingue
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a href="/login" class="btn btn-primary btn-lg">
+                            <i class="fab fa-discord me-2"></i>
+                            Accéder au Dashboard
+                        </a>
+                        <a href="https://github.com/kofudev/tashky-bot" class="btn btn-outline-light btn-lg" target="_blank">
+                            <i class="fab fa-github me-2"></i>
+                            GitHub
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="bot-avatar-container">
+                        <img src="<%= client.user.displayAvatarURL({ dynamic: true, size: 256 }) %>" 
+                             alt="TASHKY Bot Avatar" 
+                             class="bot-avatar img-fluid rounded-circle shadow-lg">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="container my-5">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="stat-card bg-primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3><%= stats.guilds %></h3>
+                        <p>Serveurs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-success">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3><%= stats.users %></h3>
+                        <p>Utilisateurs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-info">
+                    <div class="stat-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3><%= stats.commands %></h3>
+                        <p>Commandes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3><%= stats.ping %>ms</h3>
+                        <p>Latence</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">🎯 Fonctionnalités</h2>
+                <p class="lead text-muted">Découvre tout ce que TASHKY Bot peut faire pour ton serveur</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon bg-danger">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4>🛡️ Modération Avancée</h4>
+                    <p>20+ commandes de modération avec logs détaillés, auto-sanctions et protection anti-raid.</p>
+                    <ul class="feature-list">
+                        <li>Ban, kick, warn, mute</li>
+                        <li>Clear messages intelligent</li>
+                        <li>Anti-spam & anti-nuke</li>
+                        <li>Logs automatiques</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon bg-success">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <h4>🎫 Système de Tickets</h4>
+                    <p>Support client professionnel avec transcriptions automatiques et gestion avancée.</p>
+                    <ul class="feature-list">
+                        <li>Création par boutons</li>
+                        <li>Catégories personnalisables</li>
+                        <li>Transcriptions HTML</li>
+                        <li>Système de claim</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon bg-warning">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <h4>👑 Panel Owner</h4>
+                    <p>Contrôle total sur tous les serveurs avec des commandes ultra-puissantes.</p>
+                    <ul class="feature-list">
+                        <li>Analyse complète d'utilisateurs</li>
+                        <li>Bans globaux</li>
+                        <li>Backup de serveurs</li>
+                        <li>Exécution de code</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="container my-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="display-6 fw-bold mb-4">✨ Made with ❤️ by Kofu</h2>
+                <p class="lead mb-4">
+                    TASHKY Bot n'est pas juste un outil, mais une véritable expérience. 
+                    Un code lisible, humain, fait avec passion.
+                </p>
+                <blockquote class="blockquote">
+                    <p class="mb-0">
+                        "Créer un bot Discord qui respire la passion et le soin du détail. 
+                        Un code qui n'est pas juste fonctionnel, mais compréhensible par tous."
+                    </p>
+                    <footer class="blockquote-footer mt-2">
+                        <strong>Kofu</strong>, Développeur & Créateur
+                    </footer>
+                </blockquote>
+                <div class="d-flex gap-3 mt-4">
+                    <a href="https://github.com/kofudev" class="btn btn-outline-primary" target="_blank">
+                        <i class="fab fa-github me-2"></i>
+                        GitHub
+                    </a>
+                    <a href="https://discord.gg/support" class="btn btn-outline-success" target="_blank">
+                        <i class="fab fa-discord me-2"></i>
+                        Support
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="code-preview">
+                    <div class="code-header">
+                        <span class="code-title">
+                            <i class="fas fa-code me-2"></i>
+                            Style de Code Kofu
+                        </span>
+                    </div>
+                    <pre class="code-content"><code>/**
+ * Créer un embed avec la signature Kofu
+ * @param {string} title - Titre de l'embed
+ * @param {string} description - Description
+ * @author Kofu
+ */
+function createKofuEmbed(title, description) {
+    return new EmbedBuilder()
+        .setTitle(title)
+        .setDescription(description)
+        .setColor('#5865F2')
+        .setFooter({
+            text: '✨ Made with ❤️ by Kofu'
+        });
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark border-top border-secondary mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="fw-bold">
+                        <i class="fas fa-robot me-2"></i>
+                        TASHKY Bot
+                    </h5>
+                    <p class="text-muted mb-0">
+                        Bot Discord multifonction créé avec ❤️ par Kofu
+                    </p>
+                    <p class="text-muted small">
+                        © 2026 Kofu - Tous droits réservés | Licence MIT
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="d-flex gap-3 justify-content-md-end">
+                        <a href="https://github.com/kofudev/tashky-bot" class="text-light" target="_blank">
+                            <i class="fab fa-github fa-lg"></i>
+                        </a>
+                        <a href="https://discord.gg/support" class="text-light" target="_blank">
+                            <i class="fab fa-discord fa-lg"></i>
+                        </a>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        Uptime: <%= stats.uptime %>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
