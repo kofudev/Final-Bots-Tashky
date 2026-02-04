@@ -1,0 +1,68 @@
+{
+  "bot": {
+    "name": "TASHKY Bot",
+    "version": "1.0.0",
+    "author": "Kofu",
+    "github": "https://github.com/kofudev",
+    "license": "MIT",
+    "description": "Bot Discord multifonction fait avec ❤️ par Kofu",
+    "avatar": "https://i.imgur.com/votre-avatar.png",
+    "banner": "https://i.imgur.com/votre-banner.png"
+  },
+  "branding": {
+    "colors": {
+      "primary": "#5865F2",
+      "success": "#43B581",
+      "error": "#F04747",
+      "warning": "#FAA61A",
+      "info": "#00B0F4"
+    },
+    "emojis": {
+      "success": "✅",
+      "error": "❌",
+      "warning": "⚠️",
+      "loading": "⏳",
+      "kofu": "✨",
+      "owner": "👑",
+      "mod": "🛡️",
+      "ticket": "🎫",
+      "music": "🎵",
+      "fun": "🎮"
+    },
+    "footer": {
+      "text": "✨ Made with ❤️ by Kofu | TASHKY Bot v{version}",
+      "icon": "https://i.imgur.com/kofu-avatar.png"
+    }
+  },
+  "links": {
+    "support": "https://discord.gg/votre-serveur",
+    "invite": "https://discord.com/api/oauth2/authorize?client_id=VOTRE_ID&permissions=8&scope=bot%20applications.commands",
+    "github": "https://github.com/kofudev/tashky-bot",
+    "website": "https://votre-site.com",
+    "donate": "https://paypal.me/kofu"
+  },
+  "defaults": {
+    "language": "fr",
+    "embedColor": "#5865F2",
+    "prefix": "/",
+    "maxWarnings": 3,
+    "muteDuration": 600000,
+    "slowmodeDefault": 5
+  },
+  "limits": {
+    "maxTicketsPerUser": 1,
+    "maxBackupsPerGuild": 10,
+    "maxWarningsBeforeBan": 5,
+    "messageDeleteTimeframe": 14,
+    "bulkDeleteLimit": 100
+  },
+  "features": {
+    "moderation": true,
+    "tickets": true,
+    "economy": false,
+    "music": false,
+    "leveling": false,
+    "games": true,
+    "customCommands": false
+  }
+}

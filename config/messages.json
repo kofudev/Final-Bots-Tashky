@@ -1,0 +1,37 @@
+{
+  "errors": {
+    "noPermission": "❌ Tu n'as pas la permission d'utiliser cette commande !",
+    "botNoPermission": "❌ Je n'ai pas les permissions nécessaires pour effectuer cette action !",
+    "userNotFound": "❌ Utilisateur introuvable !",
+    "channelNotFound": "❌ Salon introuvable !",
+    "roleNotFound": "❌ Rôle introuvable !",
+    "invalidArguments": "❌ Arguments invalides ! Utilise `/help {command}` pour plus d'infos.",
+    "cooldown": "⏳ Doucement ! Attends encore **{time}** secondes avant de réutiliser cette commande.",
+    "ownerOnly": "👑 Cette commande est réservée aux propriétaires du bot (Kofu & co).",
+    "guildOnly": "❌ Cette commande ne peut être utilisée qu'sur un serveur !",
+    "dmOnly": "❌ Cette commande ne peut être utilisée qu'en messages privés !",
+    "maintenance": "🔧 Le bot est actuellement en maintenance. Réessaye plus tard !"
+  },
+  "success": {
+    "commandExecuted": "✅ Commande exécutée avec succès !",
+    "userBanned": "🔨 **{user}** a été banni avec succès !",
+    "userKicked": "👢 **{user}** a été expulsé avec succès !",
+    "userMuted": "🔇 **{user}** a été rendu muet avec succès !",
+    "userWarned": "⚠️ **{user}** a reçu un avertissement !",
+    "configUpdated": "⚙️ Configuration mise à jour avec succès !",
+    "ticketCreated": "🎫 Ton ticket a été créé : {channel}",
+    "ticketClosed": "🔒 Ticket fermé avec succès !"
+  },
+  "info": {
+    "processing": "⏳ Traitement en cours...",
+    "loading": "⏳ Chargement...",
+    "thinking": "🤔 Réflexion en cours...",
+    "calculating": "🧮 Calcul en cours..."
+  },
+  "kofu": {
+    "signature": "✨ Made with ❤️ by Kofu",
+    "credits": "Développé par Kofu - github.com/kofudev",
+    "thanks": "Merci d'utiliser TASHKY Bot ! ❤️",
+    "support": "Besoin d'aide ? Rejoins le serveur de support : {link}"
+  }
+}

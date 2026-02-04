@@ -1,0 +1,43 @@
+{
+  "name": "tashky-bot",
+  "version": "1.0.0",
+  "description": "Bot Discord multifonction fait avec ❤️ par Kofu",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "moderation",
+    "tickets",
+    "kofu"
+  ],
+  "author": "Kofu (github.com/kofudev)",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "ejs": "^3.1.9",
+    "express-session": "^1.17.3",
+    "passport": "^0.7.0",
+    "passport-discord": "^0.1.4",
+    "winston": "^3.11.0",
+    "node-cron": "^3.0.3",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kofudev/tashky-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kofudev/tashky-bot/issues"
+  },
+  "homepage": "https://github.com/kofudev/tashky-bot#readme"
+}
