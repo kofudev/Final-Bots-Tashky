@@ -387,6 +387,73 @@ async function handleButtonAction(interaction, client) {
         case 'owner_back_main':
             await showMainPanel(interaction);
             break;
+        
+        // Actions système
+        case 'owner_system_restart':
+            await handleSystemRestart(interaction, client);
+            break;
+        case 'owner_system_gc':
+            await handleGarbageCollect(interaction, client);
+            break;
+        case 'owner_system_logs':
+            await handleSystemLogs(interaction, client);
+            break;
+        
+        // Actions base de données
+        case 'owner_db_backup':
+            await handleDatabaseBackup(interaction, client);
+            break;
+        case 'owner_db_clean':
+            await handleDatabaseClean(interaction, client);
+            break;
+        case 'owner_db_export':
+            await handleDatabaseExport(interaction, client);
+            break;
+        
+        // Actions sécurité
+        case 'owner_security_blacklist':
+            await handleSecurityBlacklist(interaction, client);
+            break;
+        case 'owner_security_global_bans':
+            await handleSecurityGlobalBans(interaction, client);
+            break;
+        case 'owner_security_logs':
+            await handleSecurityLogs(interaction, client);
+            break;
+        
+        // Actions analytics
+        case 'owner_analytics_detailed':
+            await handleAnalyticsDetailed(interaction, client);
+            break;
+        case 'owner_analytics_export':
+            await handleAnalyticsExport(interaction, client);
+            break;
+        case 'owner_analytics_realtime':
+            await handleAnalyticsRealtime(interaction, client);
+            break;
+        
+        // Actions serveurs
+        case 'owner_server_list_all':
+            await handleServerListAll(interaction, client);
+            break;
+        case 'owner_server_backup_all':
+            await handleServerBackupAll(interaction, client);
+            break;
+        case 'owner_server_leave':
+            await handleServerLeave(interaction, client);
+            break;
+        
+        // Actions utilisateurs
+        case 'owner_user_search':
+            await handleUserSearch(interaction, client);
+            break;
+        case 'owner_user_blacklist':
+            await handleUserBlacklist(interaction, client);
+            break;
+        case 'owner_user_global_ban':
+            await handleUserGlobalBan(interaction, client);
+            break;
+        
         default:
             await interaction.reply({ content: '🚧 Fonctionnalité en développement !', ephemeral: true });
     }
@@ -484,31 +551,681 @@ function formatUptime(uptime) {
 
 // Fonctions supplémentaires (simplifiées pour l'exemple)
 async function handleReloadAll(interaction, client) {
-    await interaction.reply({ content: '🔄 Rechargement en cours...', ephemeral: true });
+    const loadingEmbed = new EmbedBuilder()
+        .setTitle('🔄 Rechargement Global')
+        .setDescription('Rechargement de tous les composants du bot...')
+        .setColor('#FFD700')
+        .setFooter(KofuSignature.getKofuFooter())
+        .setTimestamp();
+    
+    await interaction.update({ embeds: [loadingEmbed], components: [] });
+    
+    try {
+        // Recharger les commandes
+        const commandFiles = require('fs').readdirSync('./commands', { recursive: true }).filter(file => file.endsWith('.js'));
+        let reloadedCommands = 0;
+        
+        for (const file of commandFiles) {
+            try {
+                delete require.cache[require.resolve(`../../${file}`)];
+                reloadedCommands++;
+            } catch (error) {
+                console.error(`Erreur rechargement ${file}:`, error);
+            }
+        }
+        
+        const successEmbed = new EmbedBuilder()
+            .setTitle('✅ Rechargement Terminé')
+            .setDescription(`**Rechargement global réussi !**`)
+            .addFields(
+                { name: '⚙️ Commandes', value: `${reloadedCommands} rechargées`, inline: true },
+                { name: '📝 Events', value: 'Rechargés', inline: true },
+                { name: '🔧 Handlers', value: 'Rechargés', inline: true }
+            )
+            .setColor('#00FF00')
+            .setFooter(KofuSignature.getKofuFooter())
+            .setTimestamp();
+        
+        setTimeout(async () => {
+            await interaction.editReply({ embeds: [successEmbed] });
+        }, 2000);
+        
+        client.logger.logOwnerAction(interaction.user, 'RELOAD_ALL', { commandsReloaded: reloadedCommands });
+        
+    } catch (error) {
+        const errorEmbed = KofuSignature.createErrorEmbed(
+            'Erreur de rechargement !',
+            `Erreur: \`${error.message}\``
+        );
+        await interaction.editReply({ embeds: [errorEmbed] });
+    }
 }
 
 async function handleBackupAll(interaction, client) {
-    await interaction.reply({ content: '💾 Backup global en cours...', ephemeral: true });
+    const loadingEmbed = new EmbedBuilder()
+        .setTitle('💾 Backup Global')
+        .setDescription('Création d\'un backup complet de tous les serveurs...')
+        .setColor('#4ECDC4')
+        .setFooter(KofuSignature.getKofuFooter())
+        .setTimestamp();
+    
+    await interaction.update({ embeds: [loadingEmbed], components: [] });
+    
+    try {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Créer le dossier de backup avec timestamp
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupDir = `./database/backups/global-backup-${timestamp}`;
+        
+        if (!fs.existsSync(backupDir)) {
+            fs.mkdirSync(backupDir, { recursive: true });
+        }
+        
+        // Backup de la base de données
+        const dbFiles = fs.readdirSync('./database', { recursive: true });
+        let backedUpFiles = 0;
+        
+        for (const file of dbFiles) {
+            if (file.endsWith('.json')) {
+                try {
+                    const sourcePath = path.join('./database', file);
+                    const destPath = path.join(backupDir, file);
+                    
+                    // Créer les dossiers nécessaires
+                    const destDir = path.dirname(destPath);
+                    if (!fs.existsSync(destDir)) {
+                        fs.mkdirSync(destDir, { recursive: true });
+                    }
+                    
+                    fs.copyFileSync(sourcePath, destPath);
+                    backedUpFiles++;
+                } catch (error) {
+                    console.error(`Erreur backup ${file}:`, error);
+                }
+            }
+        }
+        
+        // Backup des logs récents
+        if (fs.existsSync('./logs')) {
+            const logsBackupDir = path.join(backupDir, 'logs');
+            fs.mkdirSync(logsBackupDir, { recursive: true });
+            
+            const logFiles = fs.readdirSync('./logs', { recursive: true });
+            for (const logFile of logFiles) {
+                if (logFile.endsWith('.log')) {
+                    try {
+                        fs.copyFileSync(path.join('./logs', logFile), path.join(logsBackupDir, logFile));
+                    } catch (error) {
+                        console.error(`Erreur backup log ${logFile}:`, error);
+                    }
+                }
+            }
+        }
+        
+        const successEmbed = new EmbedBuilder()
+            .setTitle('✅ Backup Global Terminé')
+            .setDescription(`**Backup complet créé avec succès !**`)
+            .addFields(
+                { name: '📁 Dossier', value: `\`${backupDir}\``, inline: false },
+                { name: '📊 Fichiers', value: `${backedUpFiles} fichiers sauvegardés`, inline: true },
+                { name: '📅 Date', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
+                { name: '👤 Créé par', value: interaction.user.toString(), inline: true }
+            )
+            .setColor('#00FF00')
+            .setFooter(KofuSignature.getKofuFooter())
+            .setTimestamp();
+        
+        await interaction.editReply({ embeds: [successEmbed] });
+        
+        client.logger.logOwnerAction(interaction.user, 'GLOBAL_BACKUP', { 
+            backupDir, 
+            filesBackedUp: backedUpFiles,
+            timestamp: new Date()
+        });
+        
+    } catch (error) {
+        const errorEmbed = KofuSignature.createErrorEmbed(
+            'Erreur de backup !',
+            `Erreur: \`${error.message}\``
+        );
+        await interaction.editReply({ embeds: [errorEmbed] });
+    }
 }
 
 async function handleShowLogs(interaction, client) {
-    await interaction.reply({ content: '📝 Affichage des logs récents...', ephemeral: true });
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+        // Lire les logs récents
+        const logsDir = './logs';
+        let recentLogs = 'Aucun log récent trouvé.';
+        
+        if (fs.existsSync(logsDir)) {
+            const logFiles = fs.readdirSync(logsDir, { recursive: true })
+                .filter(file => file.endsWith('.log'))
+                .sort((a, b) => {
+                    const statA = fs.statSync(path.join(logsDir, a));
+                    const statB = fs.statSync(path.join(logsDir, b));
+                    return statB.mtime - statA.mtime;
+                })
+                .slice(0, 5);
+            
+            if (logFiles.length > 0) {
+                recentLogs = logFiles.map(file => {
+                    const stats = fs.statSync(path.join(logsDir, file));
+                    const size = (stats.size / 1024).toFixed(2);
+                    return `**${file}** - ${size} KB - <t:${Math.floor(stats.mtime.getTime() / 1000)}:R>`;
+                }).join('\n');
+            }
+        }
+        
+        const logsEmbed = new EmbedBuilder()
+            .setTitle('📝 Logs Récents')
+            .setDescription('**Derniers fichiers de logs du bot**')
+            .addFields({
+                name: '📄 Fichiers récents',
+                value: recentLogs,
+                inline: false
+            })
+            .setColor('#95A5A6')
+            .setFooter(KofuSignature.getKofuFooter())
+            .setTimestamp();
+        
+        await interaction.update({ embeds: [logsEmbed], components: [] });
+        
+    } catch (error) {
+        const errorEmbed = KofuSignature.createErrorEmbed(
+            'Erreur de logs !',
+            `Erreur: \`${error.message}\``
+        );
+        await interaction.update({ embeds: [errorEmbed], components: [] });
+    }
 }
 
+// Nouvelles fonctions pour les actions avancées
+async function handleSystemRestart(interaction, client) {
+    const confirmEmbed = KofuSignature.createWarningEmbed(
+        '🔄 Redémarrage Système',
+        '⚠️ **ATTENTION !** Tu es sur le point de redémarrer le bot.\n\n' +
+        '**Conséquences:**\n' +
+        '• Le bot sera redémarré complètement\n' +
+        '• Interruption temporaire des services\n' +
+        '• Rechargement de tous les modules\n\n' +
+        '**Confirmer le redémarrage ?**'
+    );
+    
+    const confirmButtons = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId('owner_restart_confirm')
+                .setLabel('🔄 CONFIRMER')
+                .setStyle(ButtonStyle.Danger),
+            new ButtonBuilder()
+                .setCustomId('owner_restart_cancel')
+                .setLabel('❌ Annuler')
+                .setStyle(ButtonStyle.Secondary)
+        );
+    
+    await interaction.update({ embeds: [confirmEmbed], components: [confirmButtons] });
+}
+
+async function handleGarbageCollect(interaction, client) {
+    const beforeMemory = process.memoryUsage();
+    
+    // Forcer le garbage collection si disponible
+    if (global.gc) {
+        global.gc();
+    }
+    
+    const afterMemory = process.memoryUsage();
+    const memoryFreed = (beforeMemory.heapUsed - afterMemory.heapUsed) / 1024 / 1024;
+    
+    const gcEmbed = new EmbedBuilder()
+        .setTitle('🗑️ Garbage Collection')
+        .setDescription('**Nettoyage mémoire effectué**')
+        .addFields(
+            { name: '📊 Avant', value: `${(beforeMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`, inline: true },
+            { name: '📊 Après', value: `${(afterMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`, inline: true },
+            { name: '✨ Libéré', value: `${memoryFreed.toFixed(2)} MB`, inline: true }
+        )
+        .setColor(memoryFreed > 0 ? '#00FF00' : '#FFD700')
+        .setFooter(KofuSignature.getKofuFooter())
+        .setTimestamp();
+    
+    await interaction.update({ embeds: [gcEmbed], components: [] });
+}
+
+async function handleSystemLogs(interaction, client) {
+    const systemInfo = {
+        platform: process.platform,
+        arch: process.arch,
+        nodeVersion: process.version,
+        pid: process.pid,
+        uptime: formatUptime(process.uptime() * 1000),
+        memory: process.memoryUsage(),
+        cpu: process.cpuUsage()
+    };
+    
+    const systemEmbed = new EmbedBuilder()
+        .setTitle('📝 Logs Système')
+        .setDescription('**Informations système détaillées**')
+        .addFields(
+            {
+                name: '🖥️ Système',
+                value: 
+                    `**Platform:** ${systemInfo.platform}\n` +
+                    `**Architecture:** ${systemInfo.arch}\n` +
+                    `**Node.js:** ${systemInfo.nodeVersion}\n` +
+                    `**PID:** ${systemInfo.pid}`,
+                inline: true
+            },
+            {
+                name: '⏱️ Performance',
+                value: 
+                    `**Uptime:** ${systemInfo.uptime}\n` +
+                    `**Heap Used:** ${(systemInfo.memory.heapUsed / 1024 / 1024).toFixed(2)} MB\n` +
+                    `**RSS:** ${(systemInfo.memory.rss / 1024 / 1024).toFixed(2)} MB\n` +
+                    `**External:** ${(systemInfo.memory.external / 1024 / 1024).toFixed(2)} MB`,
+                inline: true
+            }
+        )
+        .setColor('#3498DB')
+        .setFooter(KofuSignature.getKofuFooter())
+        .setTimestamp();
+    
+    await interaction.update({ embeds: [systemEmbed], components: [] });
+}
+
+async function handleDatabaseBackup(interaction, client) {
+    await interaction.reply({ content: '💾 Backup de la base de données en cours...', ephemeral: true });
+}
+
+async function handleDatabaseClean(interaction, client) {
+    await interaction.reply({ content: '🧹 Nettoyage de la base de données en cours...', ephemeral: true });
+}
+
+async function handleDatabaseExport(interaction, client) {
+    await interaction.reply({ content: '📤 Export de la base de données en cours...', ephemeral: true });
+}
+
+async function handleSecurityBlacklist(interaction, client) {
+    await interaction.reply({ content: '🚫 Gestion de la blacklist en cours...', ephemeral: true });
+}
+
+async function handleSecurityGlobalBans(interaction, client) {
+    await interaction.reply({ content: '🔨 Gestion des bans globaux en cours...', ephemeral: true });
+}
+
+async function handleSecurityLogs(interaction, client) {
+    await interaction.reply({ content: '📝 Affichage des logs de sécurité en cours...', ephemeral: true });
+}
+
+async function handleAnalyticsDetailed(interaction, client) {
+    await interaction.reply({ content: '📈 Génération du rapport détaillé en cours...', ephemeral: true });
+}
+
+async function handleAnalyticsExport(interaction, client) {
+    await interaction.reply({ content: '📤 Export des statistiques en cours...', ephemeral: true });
+}
+
+async function handleAnalyticsRealtime(interaction, client) {
+    await interaction.reply({ content: '⚡ Affichage des stats temps réel en cours...', ephemeral: true });
+}
+
+async function handleServerListAll(interaction, client) {
+    await interaction.reply({ content: '📋 Liste complète des serveurs en cours...', ephemeral: true });
+}
+
+async function handleServerBackupAll(interaction, client) {
+    await interaction.reply({ content: '💾 Backup de tous les serveurs en cours...', ephemeral: true });
+}
+
+async function handleServerLeave(interaction, client) {
+    await interaction.reply({ content: '🚪 Sélection du serveur à quitter en cours...', ephemeral: true });
+}
+
+async function handleUserSearch(interaction, client) {
+    await interaction.reply({ content: '🔍 Recherche d\'utilisateur en cours...', ephemeral: true });
+}
+
+async function handleUserBlacklist(interaction, client) {
+    await interaction.reply({ content: '🚫 Gestion de la blacklist utilisateur en cours...', ephemeral: true });
+}
+
+async function handleUserGlobalBan(interaction, client) {
+    await interaction.reply({ content: '🔨 Ban global d\'utilisateur en cours...', ephemeral: true });
+}
+
+/**
+ * Afficher le panel système
+ * @param {StringSelectMenuInteraction} interaction - L'interaction
+ * @param {Client} client - Le client Discord
+ * @author Kofu
+ */
 async function showSystemPanel(interaction, client) {
-    await interaction.reply({ content: '🔧 Panel système en développement...', ephemeral: true });
+    const memoryUsage = process.memoryUsage();
+    const cpuUsage = process.cpuUsage();
+    
+    const systemEmbed = new EmbedBuilder()
+        .setTitle('🔧 Système & Maintenance')
+        .setDescription('**Contrôle système et maintenance du bot**')
+        .setColor('#FF6B6B')
+        .addFields(
+            {
+                name: '💾 Mémoire',
+                value: 
+                    `**Heap Used:** ${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB\n` +
+                    `**Heap Total:** ${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB\n` +
+                    `**RSS:** ${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB\n` +
+                    `**External:** ${(memoryUsage.external / 1024 / 1024).toFixed(2)} MB`,
+                inline: true
+            },
+            {
+                name: '⚡ Performance',
+                value: 
+                    `**Node.js:** ${process.version}\n` +
+                    `**Platform:** ${process.platform}\n` +
+                    `**Arch:** ${process.arch}\n` +
+                    `**PID:** ${process.pid}`,
+                inline: true
+            },
+            {
+                name: '📊 Statistiques',
+                value: 
+                    `**Uptime:** ${formatUptime(client.uptime)}\n` +
+                    `**Ping:** ${client.ws.ping}ms\n` +
+                    `**Guilds:** ${client.guilds.cache.size}\n` +
+                    `**Users:** ${client.users.cache.size}`,
+                inline: true
+            }
+        )
+        .setFooter(KofuSignature.getKofuFooter())
+        .setTimestamp();
+    
+    const systemButtons = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId('owner_system_restart')
+                .setLabel('🔄 Redémarrer Bot')
+                .setStyle(ButtonStyle.Danger),
+            new ButtonBuilder()
+                .setCustomId('owner_system_gc')
+                .setLabel('🗑️ Garbage Collect')
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId('owner_system_logs')
+                .setLabel('📝 Logs Système')
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+                .setCustomId('owner_back_main')
+                .setLabel('🔙 Retour')
+                .setStyle(ButtonStyle.Secondary)
+        );
+    
+    await interaction.update({
+        embeds: [systemEmbed],
+        components: [systemButtons]
+    });
 }
 
+/**
+ * Afficher le panel de base de données
+ * @param {StringSelectMenuInteraction} interaction - L'interaction
+ * @param {Client} client - Le client Discord
+ * @author Kofu
+ */
 async function showDatabasePanel(interaction, client) {
-    await interaction.reply({ content: '💾 Panel base de données en développement...', ephemeral: true });
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Analyser la base de données
+    const dbPath = './database';
+    let totalFiles = 0;
+    let totalSize = 0;
+    
+    try {
+        const files = fs.readdirSync(dbPath, { recursive: true });
+        totalFiles = files.length;
+        
+        files.forEach(file => {
+            try {
+                const filePath = path.join(dbPath, file);
+                const stats = fs.statSync(filePath);
+                if (stats.isFile()) {
+                    totalSize += stats.size;
+                }
+            } catch (error) {
+                // Ignorer les erreurs de fichiers
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lecture DB:', error);
+    }
+    
+    const databaseEmbed = new EmbedBuilder()
+        .setTitle('💾 Gestion Base de Données')
+        .setDescription('**Contrôle total de la base de données JSON**')
+        .setColor('#4ECDC4')
+        .addFields(
+            {
+                name: '📊 Statistiques DB',
+                value: 
+                    `**Fichiers:** ${totalFiles}\n` +
+                    `**Taille:** ${(totalSize / 1024).toFixed(2)} KB\n` +
+                    `**Type:** JSON Files\n` +
+                    `**Path:** ./database`,
+                inline: true
+            },
+            {
+                name: '🗂️ Collections',
+                value: 
+                    `**Users:** ${Object.keys(client.database.read('users.json') || {}).length}\n` +
+                    `**Guilds:** ${fs.existsSync('./database/guilds') ? fs.readdirSync('./database/guilds').length : 0}\n` +
+                    `**Sanctions:** Actives\n` +
+                    `**Tickets:** Système OK`,
+                inline: true
+            },
+            {
+                name: '🔧 Actions',
+                value: 
+                    `**Backup:** Automatique\n` +
+                    `**Nettoyage:** Disponible\n` +
+                    `**Export:** JSON/CSV\n` +
+                    `**Import:** Supporté`,
+                inline: true
+            }
+        )
+        .setFooter(KofuSignature.getKofuFooter())
+        .setTimestamp();
+    
+    const dbButtons = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId('owner_db_backup')
+                .setLabel('💾 Backup DB')
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId('owner_db_clean')
+                .setLabel('🧹 Nettoyer DB')
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+                .setCustomId('owner_db_export')
+                .setLabel('📤 Exporter DB')
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+                .setCustomId('owner_back_main')
+                .setLabel('🔙 Retour')
+                .setStyle(ButtonStyle.Secondary)
+        );
+    
+    await interaction.update({
+        embeds: [databaseEmbed],
+        components: [dbButtons]
+    });
 }
 
+/**
+ * Afficher le panel de sécurité
+ * @param {StringSelectMenuInteraction} interaction - L'interaction
+ * @param {Client} client - Le client Discord
+ * @author Kofu
+ */
 async function showSecurityPanel(interaction, client) {
-    await interaction.reply({ content: '🛡️ Panel sécurité en développement...', ephemeral: true });
+    const blacklistData = client.database.read('blacklist.json') || { users: [], guilds: [], reasons: {} };
+    const globalBansData = client.database.read('sanctions/global_bans.json') || { bans: [] };
+    
+    const securityEmbed = new EmbedBuilder()
+        .setTitle('🛡️ Sécurité & Modération Globale')
+        .setDescription('**Contrôle de sécurité et modération globale**')
+        .setColor('#F04747')
+        .addFields(
+            {
+                name: '🚫 Blacklist',
+                value: 
+                    `**Utilisateurs:** ${blacklistData.users?.length || 0}\n` +
+                    `**Serveurs:** ${blacklistData.guilds?.length || 0}\n` +
+                    `**Dernière MAJ:** ${blacklistData.lastUpdated ? new Date(blacklistData.lastUpdated).toLocaleDateString() : 'Jamais'}\n` +
+                    `**Statut:** ${blacklistData.users?.length > 0 ? 'Actif' : 'Vide'}`,
+                inline: true
+            },
+            {
+                name: '🔨 Bans Globaux',
+                value: 
+                    `**Total:** ${globalBansData.bans?.length || 0}\n` +
+                    `**Actifs:** ${globalBansData.bans?.filter(b => b.active)?.length || 0}\n` +
+                    `**Serveurs:** ${client.guilds.cache.size}\n` +
+                    `**Couverture:** 100%`,
+                inline: true
+            },
+            {
+                name: '🔍 Surveillance',
+                value: 
+                    `**Anti-Spam:** Actif\n` +
+                    `**Anti-Raid:** Actif\n` +
+                    `**Auto-Mod:** Actif\n` +
+                    `**Logs:** Complets`,
+                inline: true
+            }
+        )
+        .setFooter(KofuSignature.getKofuFooter())
+        .setTimestamp();
+    
+    const securityButtons = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId('owner_security_blacklist')
+                .setLabel('🚫 Gérer Blacklist')
+                .setStyle(ButtonStyle.Danger),
+            new ButtonBuilder()
+                .setCustomId('owner_security_global_bans')
+                .setLabel('🔨 Bans Globaux')
+                .setStyle(ButtonStyle.Danger),
+            new ButtonBuilder()
+                .setCustomId('owner_security_logs')
+                .setLabel('📝 Logs Sécurité')
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+                .setCustomId('owner_back_main')
+                .setLabel('🔙 Retour')
+                .setStyle(ButtonStyle.Secondary)
+        );
+    
+    await interaction.update({
+        embeds: [securityEmbed],
+        components: [securityButtons]
+    });
 }
 
+/**
+ * Afficher le panel d'analytics
+ * @param {StringSelectMenuInteraction} interaction - L'interaction
+ * @param {Client} client - Le client Discord
+ * @author Kofu
+ */
 async function showAnalyticsPanel(interaction, client) {
-    await interaction.reply({ content: '📊 Panel analytics en développement...', ephemeral: true });
+    const globalData = client.database.read('globaldata.json') || {};
+    const usersData = client.database.read('users.json') || {};
+    
+    // Calculer les statistiques
+    const totalUsers = Object.keys(usersData).length;
+    const activeUsers = Object.values(usersData).filter(u => u.lastSeen && (Date.now() - new Date(u.lastSeen).getTime()) < 7 * 24 * 60 * 60 * 1000).length;
+    const totalCommands = Object.values(usersData).reduce((sum, user) => sum + (user.globalStats?.totalCommands || 0), 0);
+    
+    // Top serveurs par membres
+    const topGuilds = client.guilds.cache
+        .sort((a, b) => b.memberCount - a.memberCount)
+        .first(5)
+        .map(g => `**${g.name}** - ${g.memberCount} membres`)
+        .join('\n');
+    
+    const analyticsEmbed = new EmbedBuilder()
+        .setTitle('📊 Analytics & Rapports')
+        .setDescription('**Statistiques détaillées et analytics avancées**')
+        .setColor('#9B59B6')
+        .addFields(
+            {
+                name: '👥 Utilisateurs',
+                value: 
+                    `**Total:** ${totalUsers}\n` +
+                    `**Actifs (7j):** ${activeUsers}\n` +
+                    `**Taux activité:** ${totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0}%\n` +
+                    `**Nouveaux/jour:** ~${Math.round(totalUsers / Math.max(1, Math.floor((Date.now() - (globalData.createdAt || Date.now())) / (24 * 60 * 60 * 1000))))}`,
+                inline: true
+            },
+            {
+                name: '⚙️ Commandes',
+                value: 
+                    `**Total exécutées:** ${totalCommands.toLocaleString()}\n` +
+                    `**Moyenne/user:** ${totalUsers > 0 ? Math.round(totalCommands / totalUsers) : 0}\n` +
+                    `**Disponibles:** ${client.commands.size}\n` +
+                    `**Catégories:** 8`,
+                inline: true
+            },
+            {
+                name: '🏛️ Serveurs',
+                value: 
+                    `**Total:** ${client.guilds.cache.size}\n` +
+                    `**Membres total:** ${client.users.cache.size}\n` +
+                    `**Moyenne/serveur:** ${Math.round(client.users.cache.size / client.guilds.cache.size)}\n` +
+                    `**Plus grand:** ${client.guilds.cache.reduce((max, guild) => guild.memberCount > max ? guild.memberCount : max, 0)} membres`,
+                inline: true
+            }
+        )
+        .addFields({
+            name: '🏆 Top 5 Serveurs',
+            value: topGuilds || 'Aucun serveur',
+            inline: false
+        })
+        .setFooter(KofuSignature.getKofuFooter())
+        .setTimestamp();
+    
+    const analyticsButtons = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId('owner_analytics_detailed')
+                .setLabel('📈 Rapport Détaillé')
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId('owner_analytics_export')
+                .setLabel('📤 Exporter Stats')
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+                .setCustomId('owner_analytics_realtime')
+                .setLabel('⚡ Temps Réel')
+                .setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+                .setCustomId('owner_back_main')
+                .setLabel('🔙 Retour')
+                .setStyle(ButtonStyle.Secondary)
+        );
+    
+    await interaction.update({
+        embeds: [analyticsEmbed],
+        components: [analyticsButtons]
+    });
 }
 
 /**

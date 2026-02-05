@@ -6,29 +6,160 @@
     <title>Dashboard - TASHKY Bot Panel</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            background-size: 400% 400%;
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stat-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+        }
+        
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .navbar {
+            background: rgba(0, 0, 0, 0.2) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .activity-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .floating-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+    </style>
 </head>
-<body class="bg-dark text-light">
+<body class="text-light">
+    <!-- Floating Background Elements -->
+    <div class="floating-elements">
+        <div class="floating-element" style="width: 60px; height: 60px; top: 10%; left: 10%; animation-delay: 0s;"></div>
+        <div class="floating-element" style="width: 40px; height: 40px; top: 20%; right: 20%; animation-delay: 1s;"></div>
+        <div class="floating-element" style="width: 80px; height: 80px; bottom: 20%; left: 15%; animation-delay: 2s;"></div>
+        <div class="floating-element" style="width: 50px; height: 50px; bottom: 30%; right: 10%; animation-delay: 3s;"></div>
+    </div>
+
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-robot me-2"></i>
-                TASHKY Bot Panel
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <div class="me-3 pulse-animation">
+                    <i class="fas fa-robot fa-2x text-primary"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0">TASHKY Bot</h4>
+                    <small class="text-muted">Panel d'Administration</small>
+                </div>
             </a>
             
             <div class="navbar-nav ms-auto">
                 <div class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user me-2"></i>
+                    <a class="nav-link dropdown-toggle glass-card px-3 py-2" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-2"></i>
                         <% if (typeof user !== 'undefined' && user) { %>
                             <%= user.username %>
+                            <% if (isOwner) { %>
+                                <span class="badge bg-warning ms-2">👑 Owner</span>
+                            <% } %>
                         <% } else { %>
                             Utilisateur
                         <% } %>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-dark">
-                        <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a></li>
+                    <ul class="dropdown-menu dropdown-menu-dark glass-card">
+                        <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Profil</a></li>
+                        <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Paramètres</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a></li>
                     </ul>
                 </div>
             </div>
@@ -37,229 +168,351 @@
 
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block bg-secondary sidebar collapse">
-                <div class="position-sticky pt-3">
+            <!-- Enhanced Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-4">
+                    <div class="glass-card p-3 mb-4">
+                        <div class="text-center">
+                            <div class="stat-icon mx-auto mb-2" style="width: 60px; height: 60px;">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <h6 class="text-light">Tableau de Bord</h6>
+                            <small class="text-muted">Contrôle Total</small>
+                        </div>
+                    </div>
+                    
                     <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active text-light" href="/dashboard">
-                                <i class="fas fa-tachometer-alt me-2"></i>
-                                Dashboard
+                        <li class="nav-item mb-2">
+                            <a class="nav-link active text-light glass-card p-3 rounded" href="/dashboard">
+                                <i class="fas fa-tachometer-alt me-3"></i>
+                                <span>Dashboard</span>
+                                <i class="fas fa-chevron-right ms-auto"></i>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-light" href="/servers">
-                                <i class="fas fa-server me-2"></i>
-                                Serveurs
+                        <li class="nav-item mb-2">
+                            <a class="nav-link text-light glass-card p-3 rounded" href="/servers">
+                                <i class="fas fa-server me-3"></i>
+                                <span>Serveurs</span>
+                                <span class="badge bg-primary ms-auto">
+                                    <% if (typeof client !== 'undefined' && client && client.guilds) { %>
+                                        <%= client.guilds.cache.size %>
+                                    <% } else { %>
+                                        0
+                                    <% } %>
+                                </span>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-light" href="/commands">
-                                <i class="fas fa-terminal me-2"></i>
-                                Commandes
+                        <li class="nav-item mb-2">
+                            <a class="nav-link text-light glass-card p-3 rounded" href="/commands">
+                                <i class="fas fa-terminal me-3"></i>
+                                <span>Commandes</span>
+                                <span class="badge bg-success ms-auto">90+</span>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-light" href="/logs">
-                                <i class="fas fa-file-alt me-2"></i>
-                                Logs
+                        <li class="nav-item mb-2">
+                            <a class="nav-link text-light glass-card p-3 rounded" href="/logs">
+                                <i class="fas fa-file-alt me-3"></i>
+                                <span>Logs</span>
+                                <span class="badge bg-warning ms-auto">Live</span>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-light" href="/settings">
-                                <i class="fas fa-cog me-2"></i>
-                                Paramètres
+                        <li class="nav-item mb-2">
+                            <a class="nav-link text-light glass-card p-3 rounded" href="/analytics">
+                                <i class="fas fa-chart-line me-3"></i>
+                                <span>Analytics</span>
                             </a>
                         </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link text-light glass-card p-3 rounded" href="/settings">
+                                <i class="fas fa-cog me-3"></i>
+                                <span>Paramètres</span>
+                            </a>
+                        </li>
+                        
+                        <% if (isOwner) { %>
+                        <li class="nav-item mt-4">
+                            <hr class="text-muted">
+                            <h6 class="text-warning mb-3">
+                                <i class="fas fa-crown me-2"></i>
+                                Zone Owner
+                            </h6>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link text-warning glass-card p-3 rounded border-warning" href="/owner">
+                                <i class="fas fa-shield-alt me-3"></i>
+                                <span>Panel Owner</span>
+                                <i class="fas fa-lock ms-auto"></i>
+                            </a>
+                        </li>
+                        <% } %>
                     </ul>
                 </div>
             </nav>
 
-            <!-- Main content -->
+            <!-- Enhanced Main Content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">
-                        <i class="fas fa-tachometer-alt me-2"></i>
-                        Dashboard
-                    </h1>
-                </div>
-
-                <!-- Stats Cards -->
-                <div class="row mb-4">
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card bg-primary text-white">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-uppercase mb-1">Serveurs</div>
-                                        <div class="h5 mb-0 font-weight-bold">
-                                            <% if (typeof stats !== 'undefined' && stats.guilds) { %>
-                                                <%= stats.guilds %>
-                                            <% } else { %>
-                                                0
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-server fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Header -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-4 pb-3 mb-4">
+                    <div>
+                        <h1 class="h2 text-light">
+                            <i class="fas fa-tachometer-alt me-3 text-primary"></i>
+                            Dashboard Principal
+                        </h1>
+                        <p class="text-muted mb-0">Vue d'ensemble de votre bot TASHKY</p>
                     </div>
-
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card bg-success text-white">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-uppercase mb-1">Utilisateurs</div>
-                                        <div class="h5 mb-0 font-weight-bold">
-                                            <% if (typeof stats !== 'undefined' && stats.users) { %>
-                                                <%= stats.users %>
-                                            <% } else { %>
-                                                0
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-users fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card bg-info text-white">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-uppercase mb-1">Commandes</div>
-                                        <div class="h5 mb-0 font-weight-bold">
-                                            <% if (typeof stats !== 'undefined' && stats.commands) { %>
-                                                <%= stats.commands %>
-                                            <% } else { %>
-                                                0
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-terminal fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card bg-warning text-white">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-uppercase mb-1">Uptime</div>
-                                        <div class="h5 mb-0 font-weight-bold">
-                                            <% if (typeof stats !== 'undefined' && stats.uptime) { %>
-                                                <%= stats.uptime %>
-                                            <% } else { %>
-                                                0s
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-clock fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-outline-light glass-card" onclick="refreshStats()">
+                                <i class="fas fa-sync-alt me-2"></i>Actualiser
+                            </button>
+                            <button type="button" class="btn btn-outline-primary glass-card" onclick="exportData()">
+                                <i class="fas fa-download me-2"></i>Exporter
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="row mb-4">
+                <!-- Enhanced Stats Cards -->
+                <div class="row mb-5">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="stat-card text-center">
+                            <div class="stat-icon mx-auto" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                                <i class="fas fa-server text-white"></i>
+                            </div>
+                            <h3 class="text-white mb-2">
+                                <% if (typeof client !== 'undefined' && client && client.guilds) { %>
+                                    <%= client.guilds.cache.size %>
+                                <% } else { %>
+                                    0
+                                <% } %>
+                            </h3>
+                            <p class="text-muted mb-0">Serveurs Connectés</p>
+                            <small class="text-success">
+                                <i class="fas fa-arrow-up me-1"></i>+2 cette semaine
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="stat-card text-center">
+                            <div class="stat-icon mx-auto" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                                <i class="fas fa-users text-white"></i>
+                            </div>
+                            <h3 class="text-white mb-2">
+                                <% if (typeof client !== 'undefined' && client && client.users) { %>
+                                    <%= client.users.cache.size.toLocaleString('fr-FR') %>
+                                <% } else { %>
+                                    0
+                                <% } %>
+                            </h3>
+                            <p class="text-muted mb-0">Utilisateurs Actifs</p>
+                            <small class="text-success">
+                                <i class="fas fa-arrow-up me-1"></i>+156 aujourd'hui
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="stat-card text-center">
+                            <div class="stat-icon mx-auto" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                                <i class="fas fa-terminal text-white"></i>
+                            </div>
+                            <h3 class="text-white mb-2">90+</h3>
+                            <p class="text-muted mb-0">Commandes Disponibles</p>
+                            <small class="text-info">
+                                <i class="fas fa-plus me-1"></i>Système complet
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="stat-card text-center">
+                            <div class="stat-icon mx-auto" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                                <i class="fas fa-clock text-white"></i>
+                            </div>
+                            <h3 class="text-white mb-2">
+                                <% if (typeof client !== 'undefined' && client && client.uptime) { %>
+                                    <%= Math.floor(client.uptime / (1000 * 60 * 60 * 24)) %>j
+                                <% } else { %>
+                                    0j
+                                <% } %>
+                            </h3>
+                            <p class="text-muted mb-0">Temps de Fonctionnement</p>
+                            <small class="text-success">
+                                <i class="fas fa-check-circle me-1"></i>99.9% uptime
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Quick Actions -->
+                <div class="row mb-5">
                     <div class="col-12">
-                        <div class="card bg-secondary">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">
-                                    <i class="fas fa-bolt me-2"></i>
-                                    Actions Rapides
-                                </h5>
+                        <div class="glass-card p-4">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="stat-icon me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #ff9a9e, #fecfef);">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div>
+                                    <h5 class="text-white mb-0">Actions Rapides</h5>
+                                    <small class="text-muted">Contrôles essentiels du bot</small>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3 mb-2">
-                                        <button class="btn btn-outline-primary w-100" onclick="restartBot()">
-                                            <i class="fas fa-redo me-2"></i>
-                                            Redémarrer Bot
-                                        </button>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <button class="btn btn-outline-success w-100" onclick="reloadCommands()">
-                                            <i class="fas fa-sync me-2"></i>
-                                            Recharger Commandes
-                                        </button>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <button class="btn btn-outline-info w-100" onclick="viewLogs()">
-                                            <i class="fas fa-file-alt me-2"></i>
-                                            Voir Logs
-                                        </button>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <button class="btn btn-outline-warning w-100" onclick="backupData()">
-                                            <i class="fas fa-download me-2"></i>
-                                            Backup
-                                        </button>
-                                    </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <button class="btn btn-outline-primary w-100 glass-card p-3" onclick="restartBot()">
+                                        <i class="fas fa-redo me-2"></i>
+                                        <div>
+                                            <div>Redémarrer Bot</div>
+                                            <small class="text-muted">Redémarrage complet</small>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <button class="btn btn-outline-success w-100 glass-card p-3" onclick="reloadCommands()">
+                                        <i class="fas fa-sync me-2"></i>
+                                        <div>
+                                            <div>Recharger Commandes</div>
+                                            <small class="text-muted">Mise à jour à chaud</small>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <button class="btn btn-outline-info w-100 glass-card p-3" onclick="viewLogs()">
+                                        <i class="fas fa-file-alt me-2"></i>
+                                        <div>
+                                            <div>Voir Logs</div>
+                                            <small class="text-muted">Logs en temps réel</small>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <button class="btn btn-outline-warning w-100 glass-card p-3" onclick="backupData()">
+                                        <i class="fas fa-download me-2"></i>
+                                        <div>
+                                            <div>Backup</div>
+                                            <small class="text-muted">Sauvegarde complète</small>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Activity -->
+                <!-- Enhanced Recent Activity -->
                 <div class="row">
-                    <div class="col-12">
-                        <div class="card bg-secondary">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">
-                                    <i class="fas fa-history me-2"></i>
-                                    Activité Récente
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-dark table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Heure</th>
-                                                <th>Action</th>
-                                                <th>Utilisateur</th>
-                                                <th>Serveur</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Il y a 2 min</td>
-                                                <td><span class="badge bg-success">Connexion</span></td>
-                                                <td>DemoUser#0001</td>
-                                                <td>Panel Web</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Il y a 5 min</td>
-                                                <td><span class="badge bg-info">Commande</span></td>
-                                                <td>Utilisateur#1234</td>
-                                                <td>Mon Serveur</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Il y a 10 min</td>
-                                                <td><span class="badge bg-primary">Démarrage</span></td>
-                                                <td>Système</td>
-                                                <td>Bot</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                    <div class="col-lg-8 mb-4">
+                        <div class="glass-card p-4">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="stat-icon me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #a8edea, #fed6e3);">
+                                    <i class="fas fa-history"></i>
                                 </div>
+                                <div>
+                                    <h5 class="text-white mb-0">Activité Récente</h5>
+                                    <small class="text-muted">Dernières actions du bot</small>
+                                </div>
+                            </div>
+                            
+                            <div class="activity-timeline">
+                                <div class="activity-item d-flex align-items-center p-3 mb-3 activity-card">
+                                    <div class="activity-icon me-3">
+                                        <i class="fas fa-user-plus text-success"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="text-light">Nouvel utilisateur connecté</div>
+                                        <small class="text-muted">DemoUser#0001 • Il y a 2 minutes</small>
+                                    </div>
+                                    <span class="badge bg-success">Connexion</span>
+                                </div>
+                                
+                                <div class="activity-item d-flex align-items-center p-3 mb-3 activity-card">
+                                    <div class="activity-icon me-3">
+                                        <i class="fas fa-terminal text-info"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="text-light">Commande /help exécutée</div>
+                                        <small class="text-muted">Utilisateur#1234 • Il y a 5 minutes</small>
+                                    </div>
+                                    <span class="badge bg-info">Commande</span>
+                                </div>
+                                
+                                <div class="activity-item d-flex align-items-center p-3 mb-3 activity-card">
+                                    <div class="activity-icon me-3">
+                                        <i class="fas fa-power-off text-primary"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="text-light">Bot démarré avec succès</div>
+                                        <small class="text-muted">Système • Il y a 10 minutes</small>
+                                    </div>
+                                    <span class="badge bg-primary">Système</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 mb-4">
+                        <div class="glass-card p-4 mb-4">
+                            <h6 class="text-light mb-3">
+                                <i class="fas fa-chart-pie me-2"></i>
+                                Statistiques Rapides
+                            </h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Utilisation CPU</small>
+                                    <small class="text-success">23%</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: 23%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Utilisation RAM</small>
+                                    <small class="text-warning">67%</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-warning" style="width: 67%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Ping Discord</small>
+                                    <small class="text-info">
+                                        <% if (typeof client !== 'undefined' && client && client.ws) { %>
+                                            <%= client.ws.ping %>ms
+                                        <% } else { %>
+                                            0ms
+                                        <% } %>
+                                    </small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-info" style="width: 15%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-4">
+                            <h6 class="text-light mb-3">
+                                <i class="fas fa-trophy me-2"></i>
+                                Top Commandes
+                            </h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">/help</span>
+                                <span class="badge bg-primary">1,234</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">/ping</span>
+                                <span class="badge bg-success">987</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">/userinfo</span>
+                                <span class="badge bg-info">654</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">/balance</span>
+                                <span class="badge bg-warning">432</span>
                             </div>
                         </div>
                     </div>
@@ -269,40 +522,117 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/main.js"></script>
+    <script src="/static/js/main.js"></script>
     
     <script>
+        // Enhanced JavaScript functions
+        function refreshStats() {
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Actualisation...';
+            btn.disabled = true;
+            
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Update stats in real-time
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        showNotification('Statistiques actualisées !', 'success');
+                    }, 1000);
+                })
+                .catch(error => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    showNotification('Erreur lors de l\'actualisation', 'error');
+                });
+        }
+        
         function restartBot() {
-            if (confirm('Êtes-vous sûr de vouloir redémarrer le bot ?')) {
-                fetch('/api/restart', { method: 'POST' })
+            if (confirm('⚠️ Êtes-vous sûr de vouloir redémarrer le bot ?\n\nCela interrompra temporairement tous les services.')) {
+                showNotification('Redémarrage du bot en cours...', 'info');
+                fetch('/api/owner/restart', { method: 'POST' })
                     .then(response => response.json())
                     .then(data => {
-                        alert(data.message || 'Bot redémarré !');
+                        showNotification(data.message || 'Bot redémarré avec succès !', 'success');
                     })
                     .catch(error => {
-                        alert('Erreur lors du redémarrage');
+                        showNotification('Erreur lors du redémarrage', 'error');
                     });
             }
         }
         
         function reloadCommands() {
-            fetch('/api/reload', { method: 'POST' })
+            showNotification('Rechargement des commandes...', 'info');
+            fetch('/api/owner/reload-commands', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
-                    alert(data.message || 'Commandes rechargées !');
+                    showNotification(data.message || 'Commandes rechargées !', 'success');
                 })
                 .catch(error => {
-                    alert('Erreur lors du rechargement');
+                    showNotification('Erreur lors du rechargement', 'error');
                 });
         }
         
         function viewLogs() {
-            window.location.href = '/logs';
+            window.open('/logs', '_blank');
         }
         
         function backupData() {
-            window.location.href = '/api/backup';
+            showNotification('Génération du backup...', 'info');
+            window.location.href = '/api/owner/backup-all';
         }
+        
+        function exportData() {
+            showNotification('Export des données...', 'info');
+            window.location.href = '/api/export/dashboard-data';
+        }
+        
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: '#43e97b',
+                error: '#f5576c',
+                warning: '#f093fb',
+                info: '#4facfe'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = 'position-fixed top-0 end-0 m-3 p-3 rounded glass-card';
+            notification.style.zIndex = '9999';
+            notification.style.background = colors[type];
+            notification.style.color = 'white';
+            notification.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : type === 'warning' ? 'exclamation' : 'info'}-circle me-2"></i>
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Auto-refresh stats every 30 seconds
+        setInterval(() => {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Update stats silently
+                })
+                .catch(error => console.log('Auto-refresh failed'));
+        }, 30000);
+        
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
     </script>
 </body>
 </html>

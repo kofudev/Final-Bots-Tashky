@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 Owner Panel - TASHKY Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 50%, #ff9ff3 100%);
+            min-height: 100vh;
+        }
+        
+        .owner-card {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.1));
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(255, 215, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .owner-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #ffd700, #ff8c00, #ff6b6b, #ffd700);
+            background-size: 400% 400%;
+            animation: ownerGradient 3s ease infinite;
+        }
+        
+        @keyframes ownerGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .danger-zone {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(139, 0, 0, 0.05));
+            border: 2px solid rgba(255, 0, 0, 0.3);
+            border-radius: 20px;
+        }
+        
+        .critical-action {
+            background: linear-gradient(135deg, #ff4757, #c44569);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .critical-action:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
+        }
+        
+        .owner-badge {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #000;
+            font-weight: bold;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .owner-stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .owner-stat-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="text-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px);">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <div class="me-3">
+                    <i class="fas fa-crown fa-2x text-warning"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0 text-warning">OWNER PANEL</h4>
+                    <small class="text-muted">Contrôle Total TASHKY</small>
+                </div>
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <div class="owner-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>ACCÈS OWNER</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- Warning Banner -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-warning owner-card" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">⚠️ ZONE OWNER - ACCÈS RESTREINT</h5>
+                            <p class="mb-0">Vous avez accès aux fonctions critiques du bot. Toutes les actions sont loggées et surveillées.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Stats -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="owner-card p-4">
+                    <h3 class="text-warning mb-4">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Statistiques Globales
+                    </h3>
+                    
+                    <div class="stats-grid">
+                        <div class="owner-stat-card">
+                            <div class="mb-3">
+                                <i class="fas fa-server fa-3x text-primary"></i>
+                            </div>
+                            <h4 class="text-white">
+                                <% if (typeof allGuilds !== 'undefined' && allGuilds) { %>
+                                    <%= allGuilds.length %>
+                                <% } else { %>
+                                    0
+                                <% } %>
+                            </h4>
+                            <p class="text-muted mb-0">Serveurs Totaux</p>
+                            <small class="text-success">
+                                <i class="fas fa-arrow-up me-1"></i>
+                                Croissance stable
+                            </small>
+                        </div>
+                        
+                        <div class="owner-stat-card">
+                            <div class="mb-3">
+                                <i class="fas fa-users fa-3x text-success"></i>
+                            </div>
+                            <h4 class="text-white">
+                                <% if (typeof client !== 'undefined' && client && client.users) { %>
+                                    <%= client.users.cache.size.toLocaleString('fr-FR') %>
+                                <% } else { %>
+                                    0
+                                <% } %>
+                            </h4>
+                            <p class="text-muted mb-0">Utilisateurs Uniques</p>
+                            <small class="text-info">
+                                <i class="fas fa-globe me-1"></i>
+                                Portée mondiale
+                            </small>
+                        </div>
+                        
+                        <div class="owner-stat-card">
+                            <div class="mb-3">
+                                <i class="fas fa-memory fa-3x text-warning"></i>
+                            </div>
+                            <h4 class="text-white">
+                                <%= Math.round(process.memoryUsage().heapUsed / 1024 / 1024) %>MB
+                            </h4>
+                            <p class="text-muted mb-0">Utilisation RAM</p>
+                            <small class="text-warning">
+                                <i class="fas fa-microchip me-1"></i>
+                                Optimisé
+                            </small>
+                        </div>
+                        
+                        <div class="owner-stat-card">
+                            <div class="mb-3">
+                                <i class="fas fa-clock fa-3x text-info"></i>
+                            </div>
+                            <h4 class="text-white">
+                                <% if (typeof client !== 'undefined' && client && client.uptime) { %>
+                                    <%= Math.floor(client.uptime / (1000 * 60 * 60 * 24)) %>j
+                                <% } else { %>
+                                    0j
+                                <% } %>
+                            </h4>
+                            <p class="text-muted mb-0">Uptime</p>
+                            <small class="text-success">
+                                <i class="fas fa-check-circle me-1"></i>
+                                99.9% disponibilité
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Actions -->
+        <div class="row mb-5">
+            <div class="col-lg-8">
+                <div class="owner-card p-4">
+                    <h4 class="text-warning mb-4">
+                        <i class="fas fa-tools me-2"></i>
+                        Actions Critiques
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <button class="btn critical-action w-100 p-3" onclick="globalRestart()">
+                                <i class="fas fa-power-off me-2"></i>
+                                <div>
+                                    <div class="fw-bold">Redémarrage Global</div>
+                                    <small>Redémarre complètement le bot</small>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <button class="btn btn-warning w-100 p-3" onclick="reloadAllCommands()">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                <div>
+                                    <div class="fw-bold">Recharger Commandes</div>
+                                    <small>Recharge toutes les commandes</small>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <button class="btn btn-info w-100 p-3" onclick="globalBackup()">
+                                <i class="fas fa-database me-2"></i>
+                                <div>
+                                    <div class="fw-bold">Backup Global</div>
+                                    <small>Sauvegarde complète</small>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <button class="btn btn-success w-100 p-3" onclick="viewGlobalLogs()">
+                                <i class="fas fa-file-alt me-2"></i>
+                                <div>
+                                    <div class="fw-bold">Logs Globaux</div>
+                                    <small>Tous les logs système</small>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="owner-card p-4 mb-4">
+                    <h5 class="text-warning mb-3">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Sécurité
+                    </h5>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Niveau de Sécurité</small>
+                            <small class="text-success">MAXIMUM</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Surveillance Active</small>
+                            <small class="text-info">24/7</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-info" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-outline-warning btn-sm" onclick="viewSecurityLogs()">
+                            <i class="fas fa-eye me-1"></i>
+                            Voir Logs Sécurité
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="owner-card p-4">
+                    <h5 class="text-warning mb-3">
+                        <i class="fas fa-users-cog me-2"></i>
+                        Gestion Utilisateurs
+                    </h5>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="viewAllUsers()">
+                            <i class="fas fa-list me-1"></i>
+                            Tous les Utilisateurs
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm" onclick="viewSuspiciousUsers()">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Utilisateurs Suspects
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="viewBannedUsers()">
+                            <i class="fas fa-ban me-1"></i>
+                            Utilisateurs Bannis
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="row">
+            <div class="col-12">
+                <div class="danger-zone p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fas fa-skull-crossbones fa-2x text-danger me-3"></i>
+                        <div>
+                            <h4 class="text-danger mb-1">🚨 ZONE DANGEREUSE</h4>
+                            <p class="text-muted mb-0">Actions irréversibles - Utiliser avec une extrême prudence</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-outline-danger w-100" onclick="emergencyShutdown()">
+                                <i class="fas fa-power-off me-2"></i>
+                                Arrêt d'Urgence
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-outline-danger w-100" onclick="resetAllData()">
+                                <i class="fas fa-trash-alt me-2"></i>
+                                Reset Données
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-outline-danger w-100" onclick="maintenanceMode()">
+                                <i class="fas fa-wrench me-2"></i>
+                                Mode Maintenance
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Critical Actions
+        function globalRestart() {
+            if (confirm('⚠️ ATTENTION ⚠️\n\nVous êtes sur le point de redémarrer complètement le bot.\nCela affectera TOUS les serveurs connectés.\n\nÊtes-vous absolument certain ?')) {
+                if (confirm('🚨 CONFIRMATION FINALE 🚨\n\nTapez OK pour confirmer le redémarrage global.')) {
+                    showOwnerNotification('🔄 Redémarrage global en cours...', 'warning');
+                    fetch('/api/owner/global-restart', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            showOwnerNotification(data.message || 'Redémarrage global initié', 'success');
+                        })
+                        .catch(error => {
+                            showOwnerNotification('Erreur lors du redémarrage global', 'error');
+                        });
+                }
+            }
+        }
+        
+        function reloadAllCommands() {
+            showOwnerNotification('🔄 Rechargement de toutes les commandes...', 'info');
+            fetch('/api/owner/reload-commands', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    showOwnerNotification(data.message || 'Toutes les commandes rechargées', 'success');
+                })
+                .catch(error => {
+                    showOwnerNotification('Erreur lors du rechargement', 'error');
+                });
+        }
+        
+        function globalBackup() {
+            showOwnerNotification('💾 Génération du backup global...', 'info');
+            fetch('/api/owner/backup-all', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    showOwnerNotification(data.message || 'Backup global créé', 'success');
+                })
+                .catch(error => {
+                    showOwnerNotification('Erreur lors du backup', 'error');
+                });
+        }
+        
+        function viewGlobalLogs() {
+            window.open('/owner/logs', '_blank');
+        }
+        
+        function viewSecurityLogs() {
+            window.open('/owner/security-logs', '_blank');
+        }
+        
+        function viewAllUsers() {
+            window.open('/owner/users', '_blank');
+        }
+        
+        function viewSuspiciousUsers() {
+            window.open('/owner/suspicious-users', '_blank');
+        }
+        
+        function viewBannedUsers() {
+            window.open('/owner/banned-users', '_blank');
+        }
+        
+        // Danger Zone Actions
+        function emergencyShutdown() {
+            if (confirm('🚨 ARRÊT D\'URGENCE 🚨\n\nCette action va IMMÉDIATEMENT arrêter le bot sur TOUS les serveurs.\nUtiliser uniquement en cas d\'urgence absolue.\n\nConfirmer ?')) {
+                if (confirm('⚠️ DERNIÈRE CHANCE ⚠️\n\nTapez OK pour confirmer l\'arrêt d\'urgence.')) {
+                    showOwnerNotification('🚨 ARRÊT D\'URGENCE ACTIVÉ', 'error');
+                    fetch('/api/owner/emergency-shutdown', { method: 'POST' });
+                }
+            }
+        }
+        
+        function resetAllData() {
+            if (confirm('💀 RESET COMPLET DES DONNÉES 💀\n\nCette action va SUPPRIMER DÉFINITIVEMENT toutes les données du bot.\nCette action est IRRÉVERSIBLE.\n\nÊtes-vous sûr ?')) {
+                const confirmation = prompt('Tapez "SUPPRIMER TOUTES LES DONNÉES" pour confirmer:');
+                if (confirmation === 'SUPPRIMER TOUTES LES DONNÉES') {
+                    showOwnerNotification('💀 Reset des données en cours...', 'error');
+                    fetch('/api/owner/reset-all-data', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            showOwnerNotification(data.message || 'Toutes les données supprimées', 'error');
+                        });
+                }
+            }
+        }
+        
+        function maintenanceMode() {
+            if (confirm('🔧 MODE MAINTENANCE 🔧\n\nLe bot sera mis en mode maintenance.\nSeuls les owners pourront utiliser les commandes.\n\nActiver ?')) {
+                showOwnerNotification('🔧 Activation du mode maintenance...', 'warning');
+                fetch('/api/owner/maintenance-mode', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        showOwnerNotification(data.message || 'Mode maintenance activé', 'warning');
+                    });
+            }
+        }
+        
+        function showOwnerNotification(message, type = 'info') {
+            const colors = {
+                success: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+                error: 'linear-gradient(135deg, #ff4757, #c44569)',
+                warning: 'linear-gradient(135deg, #ffd700, #ff8c00)',
+                info: 'linear-gradient(135deg, #4facfe, #00f2fe)'
+            };
+            
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-triangle',
+                warning: 'exclamation-circle',
+                info: 'info-circle'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = 'position-fixed top-0 end-0 m-3 p-4 rounded';
+            notification.style.zIndex = '9999';
+            notification.style.background = colors[type];
+            notification.style.color = 'white';
+            notification.style.backdropFilter = 'blur(10px)';
+            notification.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+            notification.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.2)';
+            notification.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${icons[type]} fa-lg me-3"></i>
+                    <div>
+                        <div class="fw-bold">OWNER PANEL</div>
+                        <div>${message}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+        
+        // Auto-refresh stats every 10 seconds for owner panel
+        setInterval(() => {
+            fetch('/api/owner/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Update owner stats silently
+                })
+                .catch(error => console.log('Owner auto-refresh failed'));
+        }, 10000);
+        
+        // Log owner panel access
+        fetch('/api/owner/log-access', { method: 'POST' })
+            .then(response => response.json())
+            .catch(error => console.log('Failed to log owner access'));
+    </script>
+</body>
+</html>

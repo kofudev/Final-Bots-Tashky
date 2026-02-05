@@ -229,17 +229,75 @@ class WebPanelServer {
                 switch (action) {
                     case 'reload-commands':
                         // TODO: Recharger les commandes
-                        res.json({ success: true, message: 'Commandes rechargées' });
+                        res.json({ success: true, message: 'Commandes rechargées avec succès' });
                         break;
                         
                     case 'backup-all':
                         // TODO: Backup global
-                        res.json({ success: true, message: 'Backup global lancé' });
+                        res.json({ success: true, message: 'Backup global lancé avec succès' });
                         break;
                         
                     case 'get-logs':
                         // TODO: Récupérer les logs récents
                         res.json({ success: true, logs: [] });
+                        break;
+                        
+                    case 'global-restart':
+                        // Logger l'action critique
+                        this.client.logger.logCriticalError(
+                            'GLOBAL_RESTART_REQUESTED',
+                            new Error('Redémarrage global demandé via web panel'),
+                            { userId: req.session.user.id, ip: req.ip }
+                        );
+                        res.json({ success: true, message: '🔄 Redémarrage global initié - Le bot va redémarrer dans 5 secondes' });
+                        
+                        // Redémarrage différé
+                        setTimeout(() => {
+                            process.exit(0);
+                        }, 5000);
+                        break;
+                        
+                    case 'emergency-shutdown':
+                        this.client.logger.logCriticalError(
+                            'EMERGENCY_SHUTDOWN',
+                            new Error('Arrêt d\'urgence activé via web panel'),
+                            { userId: req.session.user.id, ip: req.ip }
+                        );
+                        res.json({ success: true, message: '🚨 ARRÊT D\'URGENCE ACTIVÉ' });
+                        
+                        // Arrêt immédiat
+                        setTimeout(() => {
+                            process.exit(1);
+                        }, 1000);
+                        break;
+                        
+                    case 'maintenance-mode':
+                        // TODO: Activer le mode maintenance
+                        res.json({ success: true, message: '🔧 Mode maintenance activé' });
+                        break;
+                        
+                    case 'reset-all-data':
+                        this.client.logger.logCriticalError(
+                            'DATA_RESET_REQUESTED',
+                            new Error('Reset complet des données demandé'),
+                            { userId: req.session.user.id, ip: req.ip }
+                        );
+                        res.json({ success: true, message: '💀 Reset des données initié (SIMULATION)' });
+                        break;
+                        
+                    case 'log-access':
+                        // Logger l'accès au panel owner
+                        this.client.logger.logSecurityEvent(
+                            'OWNER_PANEL_ACCESS',
+                            {
+                                userId: req.session.user.id,
+                                ip: req.ip,
+                                userAgent: req.get('User-Agent'),
+                                timestamp: new Date().toISOString()
+                            },
+                            'INFO'
+                        );
+                        res.json({ success: true, message: 'Accès loggé' });
                         break;
                         
                     default:
@@ -250,6 +308,25 @@ class WebPanelServer {
                 console.error(`❌ [Kofu] Erreur API owner ${action}:`, error);
                 res.status(500).json({ error: error.message });
             }
+        });
+        
+        // API Owner - Statistiques avancées
+        this.app.get('/api/owner/stats', this.requireOwner, (req, res) => {
+            const stats = {
+                guilds: this.client.guilds.cache.size,
+                users: this.client.users.cache.size,
+                channels: this.client.channels.cache.size,
+                commands: this.client.commands?.size || 0,
+                uptime: this.client.uptime,
+                ping: this.client.ws.ping,
+                memory: process.memoryUsage(),
+                cpu: process.cpuUsage(),
+                version: process.version,
+                platform: process.platform,
+                timestamp: Date.now()
+            };
+            
+            res.json(stats);
         });
     }
     

@@ -194,7 +194,37 @@ class Logger {
     // ========================================
 
     /**
-     * Logger une commande utilisée
+     * Logger une commande utilisée (NOUVELLE VERSION AMÉLIORÉE)
+     * @param {string} commandName - Nom de la commande
+     * @param {string} userId - ID de l'utilisateur
+     * @param {string} guildId - ID du serveur
+     * @param {object} additionalData - Données supplémentaires
+     * @param {boolean} success - Succès ou échec
+     * @author Kofu
+     */
+    command(commandName, userId, guildId, additionalData = {}, success = true) {
+        const logData = {
+            command: commandName,
+            userId,
+            guildId,
+            success,
+            additionalData,
+            timestamp: new Date().toISOString(),
+            severity: success ? 'INFO' : 'WARNING'
+        };
+
+        const message = `Commande ${commandName} ${success ? 'exécutée' : 'échouée'} par ${userId}`;
+        
+        if (success) {
+            this.commandLogger.info(message, logData);
+        } else {
+            this.commandLogger.warn(message, logData);
+            this.logger.warn(`Échec commande: ${message}`, logData);
+        }
+    }
+
+    /**
+     * Logger une commande utilisée (MÉTHODE LEGACY POUR COMPATIBILITÉ)
      * @param {object} interaction - L'interaction Discord
      * @param {string} commandName - Nom de la commande
      * @param {boolean} success - Succès ou échec
@@ -341,6 +371,179 @@ class Logger {
         
         this.logger.warn(message, logData);
         console.warn(`🚨 [Kofu] ${message}`);
+    }
+
+    // ========================================
+    // NOUVELLES MÉTHODES DE LOGGING AVANCÉES
+    // ========================================
+
+    /**
+     * Logger les performances d'une commande
+     * @param {string} commandName - Nom de la commande
+     * @param {number} executionTime - Temps d'exécution en ms
+     * @param {object} metrics - Métriques supplémentaires
+     * @author Kofu
+     */
+    logPerformance(commandName, executionTime, metrics = {}) {
+        const logData = {
+            command: commandName,
+            executionTime,
+            metrics,
+            timestamp: new Date().toISOString(),
+            severity: executionTime > 5000 ? 'WARNING' : 'INFO'
+        };
+
+        const message = `⚡ Performance: ${commandName} exécutée en ${executionTime}ms`;
+        
+        if (executionTime > 5000) {
+            this.logger.warn(message, logData);
+        } else {
+            this.logger.info(message, logData);
+        }
+    }
+
+    /**
+     * Logger les événements de sécurité
+     * @param {string} eventType - Type d'événement
+     * @param {object} details - Détails de l'événement
+     * @param {string} severity - Niveau de sévérité
+     * @author Kofu
+     */
+    logSecurityEvent(eventType, details = {}, severity = 'WARNING') {
+        const logData = {
+            eventType,
+            details,
+            timestamp: new Date().toISOString(),
+            severity: severity.toUpperCase()
+        };
+
+        const message = `🛡️ Sécurité: ${eventType}`;
+        
+        switch (severity.toLowerCase()) {
+            case 'critical':
+                this.logger.error(message, logData);
+                console.error(`🚨 [Kofu] CRITIQUE: ${message}`);
+                break;
+            case 'warning':
+                this.logger.warn(message, logData);
+                console.warn(`⚠️ [Kofu] ${message}`);
+                break;
+            default:
+                this.logger.info(message, logData);
+        }
+    }
+
+    /**
+     * Logger les événements système
+     * @param {string} event - Événement système
+     * @param {object} data - Données de l'événement
+     * @author Kofu
+     */
+    logSystemEvent(event, data = {}) {
+        const logData = {
+            event,
+            data,
+            timestamp: new Date().toISOString(),
+            severity: 'INFO'
+        };
+
+        const message = `⚙️ Système: ${event}`;
+        this.logger.info(message, logData);
+    }
+
+    /**
+     * Logger les interactions utilisateur avancées
+     * @param {object} interaction - L'interaction Discord
+     * @param {string} action - Action effectuée
+     * @param {object} result - Résultat de l'action
+     * @author Kofu
+     */
+    logUserInteraction(interaction, action, result = {}) {
+        const logData = {
+            action,
+            user: {
+                id: interaction.user.id,
+                tag: interaction.user.tag,
+                bot: interaction.user.bot
+            },
+            guild: interaction.guild ? {
+                id: interaction.guild.id,
+                name: interaction.guild.name,
+                memberCount: interaction.guild.memberCount
+            } : null,
+            channel: {
+                id: interaction.channel?.id,
+                name: interaction.channel?.name,
+                type: interaction.channel?.type
+            },
+            result,
+            timestamp: new Date().toISOString(),
+            severity: 'INFO'
+        };
+
+        const message = `👤 Interaction: ${action} par ${interaction.user.tag}`;
+        this.logger.info(message, logData);
+    }
+
+    /**
+     * Logger les erreurs de base de données
+     * @param {string} operation - Opération de base de données
+     * @param {Error} error - L'erreur
+     * @param {object} context - Contexte de l'opération
+     * @author Kofu
+     */
+    logDatabaseError(operation, error, context = {}) {
+        const logData = {
+            operation,
+            error: {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            },
+            context,
+            timestamp: new Date().toISOString(),
+            severity: 'ERROR'
+        };
+
+        const message = `💾 DB Erreur: ${operation} - ${error.message}`;
+        this.logger.error(message, logData);
+        console.error(`💾 [Kofu] ${message}`);
+    }
+
+    /**
+     * Logger les statistiques périodiques
+     * @param {object} stats - Statistiques du bot
+     * @author Kofu
+     */
+    logStats(stats) {
+        const logData = {
+            stats,
+            timestamp: new Date().toISOString(),
+            severity: 'INFO'
+        };
+
+        const message = `📊 Stats: ${stats.guilds} serveurs, ${stats.users} utilisateurs`;
+        this.logger.info(message, logData);
+    }
+
+    /**
+     * Logger les événements de cache
+     * @param {string} cacheType - Type de cache
+     * @param {string} operation - Opération (hit, miss, clear, etc.)
+     * @param {object} details - Détails de l'opération
+     * @author Kofu
+     */
+    logCacheEvent(cacheType, operation, details = {}) {
+        const logData = {
+            cacheType,
+            operation,
+            details,
+            timestamp: new Date().toISOString(),
+            severity: 'DEBUG'
+        };
+
+        const message = `🗄️ Cache: ${operation} sur ${cacheType}`;
+        this.logger.debug(message, logData);
     }
 
     // ========================================

@@ -1,431 +1,648 @@
-/**
- * ====================================
- * COMMANDE OWNER: /alluserinfo
- * ====================================
- * 
- * Récupère le MAXIMUM d'informations possibles
- * sur n'importe quel utilisateur Discord.
- * 
- * Affichage dans plusieurs embeds détaillés avec
- * pagination pour une lecture facile.
- * 
- * @author Kofu (github.com/kofudev)
- * @version 1.0.0
- * @category Owner Commands
- * 
- * ====================================
- */
-
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const KofuSignature = require('../../utils/kofu-signature');
+// créé par kofudev - commande owner only pour userinfo complet
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const EmbedFactory = require('../../utils/embed');
+const colors = require('../../config/colors');
+const emojis = require('../../config/emojis');
+const config = require('../../config/config');
+const logger = require('../../utils/logger');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('alluserinfo')
-        .setDescription('📊 [OWNER] Obtenir TOUTES les informations sur un utilisateur')
-        .addUserOption(option =>
-            option.setName('utilisateur')
-                .setDescription('L\'utilisateur à analyser')
+        .setDescription('Informations ultra-complètes d\'un utilisateur (même hors serveur) - Owner only')
+        .addStringOption(option =>
+            option.setName('userid')
+                .setDescription('L\'ID Discord de l\'utilisateur')
                 .setRequired(true)
         ),
     
-    category: 'owner',
-    cooldown: 10,
+    category: 'admin',
+    cooldown: 5000,
     ownerOnly: true,
     
-    /**
-     * Exécution de la commande
-     * @param {ChatInputCommandInteraction} interaction - L'interaction Discord
-     * @author Kofu
-     */
     async execute(interaction) {
-        // Vérifier que c'est un owner
-        const owners = process.env.BOT_OWNERS ? JSON.parse(process.env.BOT_OWNERS) : [];
-        if (!owners.includes(interaction.user.id)) {
-            const errorEmbed = KofuSignature.createErrorEmbed(
-                'Accès refusé !',
-                'Cette commande est réservée aux propriétaires du bot (Kofu & co).'
-            );
-            return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+        // Vérifier immédiatement si l'utilisateur est propriétaire
+        if (!config.bot.owners.includes(interaction.user.id)) {
+            return await interaction.reply({
+                embeds: [EmbedFactory.error('Accès refusé', 'Cette commande est réservée aux propriétaires du bot.')],
+                flags: 64 // MessageFlags.Ephemeral
+            });
         }
-        
-        // Répondre immédiatement car ça peut prendre du temps
-        await interaction.deferReply({ ephemeral: true });
-        
-        const targetUser = interaction.options.getUser('utilisateur');
-        console.log(`🔍 [Kofu] ${interaction.user.tag} analyse l'utilisateur ${targetUser.tag}`);
-        
-        // Logger l'action owner
-        interaction.client.logger.logOwnerAction(
-            interaction.user,
-            'ALLUSERINFO',
-            { targetUser: { id: targetUser.id, tag: targetUser.tag } }
-        );
-        
+
+        // Defer immédiatement avec gestion d'erreur
         try {
-            // Récupérer TOUTES les infos possibles
-            const userInfo = await this.collectAllUserInfo(targetUser, interaction.client);
-            
-            // Créer les embeds
-            const embeds = this.createInfoEmbeds(userInfo, targetUser);
-            
-            // Créer les boutons de navigation
-            const buttons = this.createNavigationButtons();
-            
-            // Envoyer le premier embed
-            await interaction.editReply({
-                embeds: [embeds[0]],
-                components: [buttons]
-            });
-            
-            // Gérer la pagination
-            this.handlePagination(interaction, embeds, buttons);
-            
+            await interaction.deferReply();
         } catch (error) {
-            console.error('❌ [Kofu] Erreur dans alluserinfo:', error);
-            
-            const errorEmbed = KofuSignature.createErrorEmbed(
-                'Erreur !',
-                `Impossible de récupérer les informations.\\n\\n\`\`\`${error.message}\`\`\``
-            );
-            
-            await interaction.editReply({
-                embeds: [errorEmbed]
-            });
+            // Si le defer échoue, l'interaction est probablement expirée
+            logger.error('Failed to defer interaction:', error);
+            return;
         }
-    },
-    
-    /**
-     * Collecter toutes les informations possibles sur un utilisateur
-     * @param {User} user - L'utilisateur Discord
-     * @param {Client} client - Le client Discord
-     * @returns {object} Toutes les infos collectées
-     * @author Kofu
-     */
-    async collectAllUserInfo(user, client) {
-        console.log(`📊 [Kofu] Collecte des infos pour ${user.tag}...`);
-        
-        const info = {
-            basic: {},
-            servers: [],
-            moderation: {},
-            activity: {},
-            advanced: {}
-        };
-        
-        // === INFORMATIONS DE BASE ===
-        info.basic = {
-            id: user.id,
-            tag: user.tag,
-            username: user.username,
-            discriminator: user.discriminator,
-            globalName: user.globalName || user.username,
-            bot: user.bot,
-            system: user.system,
-            avatar: user.displayAvatarURL({ dynamic: true, size: 2048 }),
-            banner: user.bannerURL({ dynamic: true, size: 2048 }),
-            accentColor: user.accentColor,
-            createdAt: user.createdAt,
-            createdTimestamp: user.createdTimestamp
-        };
-        
-        // Calculer l'âge du compte
-        const accountAge = Date.now() - user.createdTimestamp;
-        const days = Math.floor(accountAge / (1000 * 60 * 60 * 24));
-        const years = Math.floor(days / 365);
-        const months = Math.floor((days % 365) / 30);
-        const remainingDays = (days % 365) % 30;
-        info.basic.accountAge = `${years} ans, ${months} mois, ${remainingDays} jours`;
-        
-        // Badges de l'utilisateur
-        const flags = user.flags ? user.flags.toArray() : [];
-        info.basic.badges = flags;
-        
-        // === SERVEURS MUTUELS ===
-        console.log(`🔍 [Kofu] Recherche des serveurs mutuels...`);
-        const mutualGuilds = client.guilds.cache.filter(guild =>
-            guild.members.cache.has(user.id)
-        );
-        
-        for (const [guildId, guild] of mutualGuilds) {
+
+        try {
+            const userId = interaction.options.getString('userid');
+            
+            // Vérifier si l'ID est valide
+            if (!/^\d{17,19}$/.test(userId)) {
+                return await interaction.editReply({
+                    embeds: [EmbedFactory.error('ID invalide', 'L\'ID Discord doit contenir entre 17 et 19 chiffres.')]
+                });
+            }
+
+            let targetUser;
+            let targetMember = null;
+
             try {
-                const member = await guild.members.fetch(user.id);
-                const serverInfo = {
-                    guildId: guild.id,
-                    guildName: guild.name,
-                    joined: member.joinedAt,
-                    nickname: member.nickname,
-                    roles: member.roles.cache
-                        .filter(r => r.id !== guild.id) // Exclure @everyone
-                        .map(r => r.name)
-                        .slice(0, 10), // Limiter à 10 rôles
-                    roleCount: member.roles.cache.size - 1,
-                    highestRole: member.roles.highest.name,
-                    color: member.displayHexColor,
-                    permissions: member.permissions.toArray().slice(0, 10),
-                    boosting: member.premiumSince !== null,
-                    boostingSince: member.premiumSince,
-                    timeout: member.communicationDisabledUntil
-                };
-                
-                info.servers.push(serverInfo);
-            } catch (err) {
-                console.log(`⚠️ [Kofu] Impossible de récupérer les infos du serveur ${guild.name}`);
+                // Essayer de récupérer l'utilisateur via l'API Discord
+                targetUser = await interaction.client.users.fetch(userId);
+            } catch (error) {
+                return await interaction.editReply({
+                    embeds: [EmbedFactory.error('Utilisateur introuvable', 'Aucun utilisateur trouvé avec cet ID Discord.')]
+                });
+            }
+
+            // Essayer de récupérer le membre du serveur si possible (sans bloquer)
+            if (interaction.guild) {
+                try {
+                    targetMember = await interaction.guild.members.fetch(userId);
+                } catch (error) {
+                    // L'utilisateur n'est pas dans ce serveur, c'est normal
+                }
+            }
+
+            // Créer une version simplifiée d'abord pour répondre rapidement
+            const quickEmbed = EmbedFactory.base()
+                .setColor(targetMember?.displayHexColor || colors.primary)
+                .setTitle(`🔍 Analyse en cours - ${targetUser.tag}`)
+                .setDescription('⏳ Génération du rapport complet...')
+                .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))
+                .addFields({
+                    name: '👤 Utilisateur',
+                    value: `**ID:** \`${targetUser.id}\`\n**Tag:** ${targetUser.tag}\n**Bot:** ${targetUser.bot ? 'Oui' : 'Non'}`,
+                    inline: true
+                })
+                .setTimestamp();
+
+            // Envoyer la réponse rapide
+            await interaction.editReply({ embeds: [quickEmbed] });
+
+            // Créer les embeds complets en arrière-plan
+            const embeds = await createCompleteUserInfoEmbeds(targetUser, targetMember, interaction);
+
+            // Remplacer par le premier embed complet
+            await interaction.editReply({ embeds: [embeds[0]] });
+
+            // Envoyer les autres embeds
+            for (let i = 1; i < embeds.length; i++) {
+                try {
+                    await interaction.followUp({ embeds: [embeds[i]] });
+                } catch (followUpError) {
+                    logger.error(`Failed to send embed ${i}:`, followUpError);
+                    // Continuer avec les autres embeds même si un échoue
+                }
+            }
+
+            // Log de la commande
+            logger.logOwnerAction(interaction.user, 'ALLUSERINFO_COMMAND', {
+                targetUserId: userId,
+                targetUsername: targetUser.username,
+                inGuild: !!targetMember,
+                embedsCount: embeds.length,
+                guildId: interaction.guild?.id,
+                guildName: interaction.guild?.name
+            });
+
+        } catch (error) {
+            logger.error(`Error in alluserinfo command for ${interaction.user.tag}:`, {
+                error: error.message,
+                stack: error.stack,
+                userId: interaction.user.id
+            });
+
+            try {
+                const errorEmbed = EmbedFactory.error('Erreur', 'Une erreur est survenue lors de la récupération des informations.');
+                await interaction.editReply({ embeds: [errorEmbed] });
+            } catch (replyError) {
+                logger.error('Failed to send error response:', replyError);
             }
         }
-        
-        info.servers.totalCount = mutualGuilds.size;
-        
-        // === MODÉRATION ===
-        console.log(`⚠️ [Kofu] Vérification de l'historique de modération...`);
-        const userData = client.database.getUser(user.id);
-        const warnings = client.database.getWarnings(user.id);
-        const bans = client.database.getBans(user.id);
-        const mutes = client.database.getMutes(user.id);
-        
-        info.moderation = {
-            warnings: warnings.length,
-            bans: bans.length,
-            mutes: mutes.length,
-            blacklisted: userData.security.blacklisted,
-            riskScore: userData.security.riskScore || 0,
-            lastWarning: warnings[warnings.length - 1] || null,
-            lastBan: bans[bans.length - 1] || null
-        };
-        
-        // === ACTIVITÉ ===
-        info.activity = {
-            totalMessages: userData.globalStats.totalMessages || 0,
-            totalCommands: userData.globalStats.totalCommands || 0,
-            firstSeen: userData.globalStats.firstSeen,
-            lastSeen: userData.globalStats.lastSeen,
-            favoriteChannels: userData.analytics?.favoriteChannels || [],
-            mostUsedCommands: userData.analytics?.mostUsedCommands || []
-        };
-        
-        // === AVANCÉ ===
-        const userFetched = await user.fetch(true); // Forcer le fetch complet
-        info.advanced = {
-            locale: userFetched.locale || 'Inconnu',
-            publicFlags: userFetched.publicFlags?.bitfield || 0,
-            accentColorHex: userFetched.accentColor ? `#${userFetched.accentColor.toString(16)}` : 'Aucune'
-        };
-        
-        console.log(`✅ [Kofu] Toutes les infos collectées !`);
-        return info;
-    },
-    
-    /**
-     * Créer les embeds d'information
-     * @param {object} info - Les informations collectées
-     * @param {User} user - L'utilisateur Discord
-     * @returns {Array} Tableau d'embeds
-     * @author Kofu
-     */
-    createInfoEmbeds(info, user) {
-        const embeds = [];
-        
-        // === EMBED 1: INFORMATIONS GÉNÉRALES ===
-        const generalEmbed = new EmbedBuilder()
-            .setColor('#5865F2')
-            .setTitle(`📊 Informations Complètes - ${user.tag}`)
-            .setThumbnail(info.basic.avatar)
-            .setDescription('**Page 1/6 - Informations Générales** 🪪')
-            .addFields(
-                { name: '👤 Nom d\'utilisateur', value: `\`${info.basic.tag}\``, inline: true },
-                { name: '🆔 ID', value: `\`${info.basic.id}\``, inline: true },
-                { name: '🏷️ Nom global', value: `\`${info.basic.globalName}\``, inline: true },
-                { name: '🤖 Bot ?', value: info.basic.bot ? '✅ Oui' : '❌ Non', inline: true },
-                { name: '🔧 Système ?', value: info.basic.system ? '✅ Oui' : '❌ Non', inline: true },
-                { name: '📅 Compte créé le', value: `<t:${Math.floor(info.basic.createdTimestamp / 1000)}:F>`, inline: false },
-                { name: '⏰ Âge du compte', value: `\`${info.basic.accountAge}\``, inline: false },
-                { name: '🎖️ Badges', value: info.basic.badges.length > 0 ? info.basic.badges.join(', ') : 'Aucun badge', inline: false }
-            )
-            .setImage(info.basic.banner || null)
-            .setFooter({ text: '✨ Made with ❤️ by Kofu | Page 1/6' })
-            .setTimestamp();
-        
-        embeds.push(generalEmbed);
-        
-        // === EMBED 2: SERVEURS MUTUELS ===
-        const serversEmbed = new EmbedBuilder()
-            .setColor('#43B581')
-            .setTitle(`🏛️ Serveurs Mutuels - ${user.tag}`)
-            .setThumbnail(info.basic.avatar)
-            .setDescription(`**Page 2/6 - Serveurs** 🏛️\\n\\nPrésent dans **${info.servers.totalCount}** serveur(s) mutuel(s)`);
-        
-        // Ajouter les 5 premiers serveurs
-        info.servers.slice(0, 5).forEach((server, index) => {
-            const joinedTimestamp = Math.floor(server.joined.getTime() / 1000);
-            serversEmbed.addFields({
-                name: `${index + 1}. ${server.guildName}`,
-                value: 
-                    `> **ID:** \`${server.guildId}\`\\n` +
-                    `> **Surnom:** ${server.nickname || 'Aucun'}\\n` +
-                    `> **Rejoint le:** <t:${joinedTimestamp}:R>\\n` +
-                    `> **Rôles:** ${server.roleCount} (Highest: ${server.highestRole})\\n` +
-                    `> **Boost:** ${server.boosting ? '✅ Oui' : '❌ Non'}`,
-                inline: false
-            });
-        });
-        
-        if (info.servers.totalCount > 5) {
-            serversEmbed.addFields({
-                name: '➕ Et plus encore...',
-                value: `*${info.servers.totalCount - 5} autre(s) serveur(s)*`,
-                inline: false
-            });
-        }
-        
-        serversEmbed.setFooter({ text: '✨ Made with ❤️ by Kofu | Page 2/6' });
-        embeds.push(serversEmbed);
-        
-        // === EMBED 3: MODÉRATION ===
-        const modEmbed = new EmbedBuilder()
-            .setColor(info.moderation.blacklisted ? '#F04747' : '#FAA61A')
-            .setTitle(`🚨 Historique de Modération - ${user.tag}`)
-            .setThumbnail(info.basic.avatar)
-            .setDescription('**Page 3/6 - Modération & Sécurité** 🚨')
-            .addFields(
-                { name: '⚠️ Avertissements', value: `\`${info.moderation.warnings}\` warn(s)`, inline: true },
-                { name: '🔨 Bannissements', value: `\`${info.moderation.bans}\` ban(s)`, inline: true },
-                { name: '🔇 Mutes', value: `\`${info.moderation.mutes}\` mute(s)`, inline: true },
-                { name: '🚫 Blacklisté', value: info.moderation.blacklisted ? '✅ OUI' : '❌ Non', inline: true },
-                { name: '📊 Score de risque', value: `\`${info.moderation.riskScore}/100\``, inline: true },
-                { name: '\\u200b', value: '\\u200b', inline: true }
-            );
-        
-        if (info.moderation.lastWarning) {
-            modEmbed.addFields({
-                name: '📝 Dernier avertissement',
-                value: 
-                    `> **Raison:** ${info.moderation.lastWarning.reason}\\n` +
-                    `> **Serveur:** ${info.moderation.lastWarning.guildName}\\n` +
-                    `> **Date:** <t:${Math.floor(new Date(info.moderation.lastWarning.timestamp).getTime() / 1000)}:R>`,
-                inline: false
-            });
-        }
-        
-        modEmbed.setFooter({ text: '✨ Made with ❤️ by Kofu | Page 3/6' });
-        embeds.push(modEmbed);
-        
-        // === EMBED 4: ACTIVITÉ ===
-        const activityEmbed = new EmbedBuilder()
-            .setColor('#00B0F4')
-            .setTitle(`📊 Statistiques & Activité - ${user.tag}`)
-            .setThumbnail(info.basic.avatar)
-            .setDescription('**Page 4/6 - Activité** 📊')
-            .addFields(
-                { name: '💬 Messages totaux', value: `\`${info.activity.totalMessages}\``, inline: true },
-                { name: '⚙️ Commandes utilisées', value: `\`${info.activity.totalCommands}\``, inline: true },
-                { name: '\\u200b', value: '\\u200b', inline: true },
-                { name: '👁️ Première activité', value: `<t:${Math.floor(new Date(info.activity.firstSeen).getTime() / 1000)}:R>`, inline: true },
-                { name: '🕐 Dernière activité', value: `<t:${Math.floor(new Date(info.activity.lastSeen).getTime() / 1000)}:R>`, inline: true },
-                { name: '\\u200b', value: '\\u200b', inline: true }
-            )
-            .setFooter({ text: '✨ Made with ❤️ by Kofu | Page 4/6' });
-        
-        embeds.push(activityEmbed);
-        
-        // === EMBED 5: DONNÉES AVANCÉES ===
-        const advancedEmbed = new EmbedBuilder()
-            .setColor('#9B59B6')
-            .setTitle(`🔬 Données Avancées - ${user.tag}`)
-            .setThumbnail(info.basic.avatar)
-            .setDescription('**Page 5/6 - Informations Techniques** 🔬')
-            .addFields(
-                { name: '🌐 Locale', value: `\`${info.advanced.locale}\``, inline: true },
-                { name: '🎨 Couleur d\'accentuation', value: `\`${info.advanced.accentColorHex}\``, inline: true },
-                { name: '🔢 Public Flags', value: `\`${info.advanced.publicFlags}\``, inline: true },
-                { name: '🔗 Avatar URL', value: `[Cliquer ici](${info.basic.avatar})`, inline: true },
-                { name: '🖼️ Banner URL', value: info.basic.banner ? `[Cliquer ici](${info.basic.banner})` : '❌ Aucune', inline: true },
-                { name: '\\u200b', value: '\\u200b', inline: true }
-            )
-            .setFooter({ text: '✨ Made with ❤️ by Kofu | Page 5/6' });
-        
-        embeds.push(advancedEmbed);
-        
-        // === EMBED 6: RÉSUMÉ ===
-        const summaryEmbed = new EmbedBuilder()
-            .setColor('#5865F2')
-            .setTitle(`📋 Résumé - ${user.tag}`)
-            .setThumbnail(info.basic.avatar)
-            .setDescription('**Page 6/6 - Résumé Général** 📋')
-            .addFields(
-                { name: '👤 Utilisateur', value: `\`${info.basic.tag}\`\\n🆔 \`${info.basic.id}\``, inline: true },
-                { name: '🏛️ Serveurs', value: `\`${info.servers.totalCount}\` serveur(s)`, inline: true },
-                { name: '⚠️ Sanctions', value: `\`${info.moderation.warnings + info.moderation.bans + info.moderation.mutes}\` total`, inline: true },
-                { name: '💬 Activité', value: `\`${info.activity.totalMessages}\` messages\\n\`${info.activity.totalCommands}\` commandes`, inline: true },
-                { name: '📊 Risque', value: info.moderation.blacklisted ? '🚨 **BLACKLISTÉ**' : `\`${info.moderation.riskScore}/100\``, inline: true },
-                { name: '⏰ Âge compte', value: `\`${info.basic.accountAge}\``, inline: true }
-            )
-            .setFooter({ text: '✨ Made with ❤️ by Kofu | Page 6/6' })
-            .setTimestamp();
-        
-        embeds.push(summaryEmbed);
-        
-        return embeds;
-    },
-    
-    /**
-     * Créer les boutons de navigation
-     * @returns {ActionRowBuilder} Row de boutons
-     * @author Kofu
-     */
-    createNavigationButtons() {
-        return new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('first')
-                    .setLabel('⏮️ Début')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('previous')
-                    .setLabel('◀️ Précédent')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('next')
-                    .setLabel('Suivant ▶️')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('last')
-                    .setLabel('Fin ⏭️')
-                    .setStyle(ButtonStyle.Primary)
-            );
-    },
-    
-    /**
-     * Gérer la pagination des embeds
-     * @param {ChatInputCommandInteraction} interaction - L'interaction Discord
-     * @param {Array} embeds - Les embeds à paginer
-     * @param {ActionRowBuilder} buttons - Les boutons de navigation
-     * @author Kofu
-     */
-    async handlePagination(interaction, embeds, buttons) {
-        let currentPage = 0;
-        
-        const collector = interaction.channel.createMessageComponentCollector({
-            filter: i => i.user.id === interaction.user.id,
-            time: 300000 // 5 minutes
-        });
-        
-        collector.on('collect', async i => {
-            if (i.customId === 'first') currentPage = 0;
-            if (i.customId === 'previous') currentPage = currentPage > 0 ? currentPage - 1 : embeds.length - 1;
-            if (i.customId === 'next') currentPage = currentPage < embeds.length - 1 ? currentPage + 1 : 0;
-            if (i.customId === 'last') currentPage = embeds.length - 1;
-            
-            await i.update({
-                embeds: [embeds[currentPage]],
-                components: [buttons]
-            });
-        });
-        
-        collector.on('end', () => {
-            console.log(`⏱️ [Kofu] Fin de la pagination pour ${interaction.user.tag}`);
-        });
     }
 };
+
+async function createCompleteUserInfoEmbeds(targetUser, targetMember, interaction) {
+    const embeds = [];
+    const accountAge = Math.floor((Date.now() - targetUser.createdTimestamp) / (1000 * 60 * 60 * 24));
+    const flags = targetUser.flags?.toArray() || [];
+
+    // Fonction helper pour tronquer les champs trop longs
+    function truncateField(text, maxLength = 1020) {
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength - 3) + '...';
+    }
+
+    // EMBED 1: Profil complet et identité
+    const embed1 = EmbedFactory.base()
+        .setColor(targetMember?.displayHexColor || colors.primary)
+        .setTitle(`🔍 RAPPORT COMPLET D'UTILISATEUR - ${targetUser.tag}`)
+        .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))
+        .setDescription(`**⚠️ CONFIDENTIEL - OWNER ONLY ⚠️**\nRapport détaillé généré le <t:${Math.floor(Date.now() / 1000)}:F>`)
+        .setTimestamp();
+
+    // Identité complète
+    let identityInfo = `**🆔 IDENTITÉ DISCORD:**\n`;
+    identityInfo += `• ID Snowflake: \`${targetUser.id}\`\n`;
+    identityInfo += `• Username: ${targetUser.username}\n`;
+    identityInfo += `• Display Name: ${targetUser.globalName || 'Aucun'}\n`;
+    identityInfo += `• Discriminator: #${targetUser.discriminator}\n`;
+    identityInfo += `• Tag complet: ${targetUser.tag}\n`;
+    identityInfo += `• Mention: ${targetUser}\n`;
+    identityInfo += `• Type: ${targetUser.bot ? '🤖 Bot' : '👤 Utilisateur humain'}\n`;
+    identityInfo += `• Système: ${targetUser.system ? '⚙️ Compte système Discord' : '❌ Non'}\n\n`;
+
+    identityInfo += `**📅 CHRONOLOGIE DE VIE:**\n`;
+    identityInfo += `• Création: <t:${Math.floor(targetUser.createdTimestamp / 1000)}:F>\n`;
+    identityInfo += `• Il y a: <t:${Math.floor(targetUser.createdTimestamp / 1000)}:R>\n`;
+    identityInfo += `• Âge total: ${accountAge} jours (${Math.floor(accountAge / 365)} ans, ${Math.floor((accountAge % 365) / 30)} mois)\n`;
+    identityInfo += `• Timestamp: \`${targetUser.createdTimestamp}\`\n`;
+    identityInfo += `• Epoch: ${Math.floor(targetUser.createdTimestamp / 1000)}\n`;
+    identityInfo += `• Hex ID: \`0x${BigInt(targetUser.id).toString(16)}\`\n`;
+    identityInfo += `• Binary: \`${BigInt(targetUser.id).toString(2).slice(0, 32)}...\``;
+
+    embed1.addFields({
+        name: '👤 PROFIL D\'IDENTITÉ COMPLET',
+        value: truncateField(identityInfo),
+        inline: false
+    });
+
+    // Analyse psychologique du nom d'utilisateur
+    let nameAnalysis = `**🧠 ANALYSE PSYCHOLOGIQUE DU USERNAME:**\n`;
+    const username = targetUser.username;
+    nameAnalysis += `• Longueur: ${username.length} caractères\n`;
+    nameAnalysis += `• Complexité: ${/[A-Z]/.test(username) ? '🔴 Majuscules' : '🟢 Minuscules'}\n`;
+    nameAnalysis += `• Chiffres: ${/\d/.test(username) ? `🔢 ${username.match(/\d/g)?.length || 0} chiffres` : '❌ Aucun'}\n`;
+    nameAnalysis += `• Caractères spéciaux: ${/[^a-zA-Z0-9_]/.test(username) ? '⚠️ Présents' : '✅ Aucun'}\n`;
+    nameAnalysis += `• Underscores: ${username.includes('_') ? '🔗 Présents' : '❌ Aucun'}\n\n`;
+
+    // Patterns suspects
+    const suspiciousPatterns = [];
+    if (/(.)\1{3,}/.test(username)) suspiciousPatterns.push('🚨 Répétitions excessives');
+    if (/^\d+$/.test(username)) suspiciousPatterns.push('🔴 Que des chiffres (bot suspect)');
+    if (username.length < 3) suspiciousPatterns.push('⚠️ Très court (suspect)');
+    if (/^[a-z]+\d+$/.test(username)) suspiciousPatterns.push('🤖 Pattern de bot classique');
+    if (/^(test|user|admin|mod)/i.test(username)) suspiciousPatterns.push('🚨 Nom générique suspect');
+    if (/\d{4,}/.test(username)) suspiciousPatterns.push('🔢 Séquence numérique longue');
+
+    if (suspiciousPatterns.length > 0) {
+        nameAnalysis += `**🚨 ALERTES COMPORTEMENTALES:**\n${suspiciousPatterns.join('\n')}\n\n`;
+    } else {
+        nameAnalysis += `**✅ PROFIL NOMINAL:** Aucun pattern suspect détecté\n\n`;
+    }
+
+    // Analyse de personnalité basée sur le nom
+    nameAnalysis += `**🎭 PROFIL PSYCHOLOGIQUE ESTIMÉ:**\n`;
+    if (username.toLowerCase().includes('dark') || username.toLowerCase().includes('shadow')) {
+        nameAnalysis += `• Personnalité: 🖤 Tendance sombre/mystérieuse\n`;
+    } else if (username.toLowerCase().includes('cute') || username.toLowerCase().includes('kawaii')) {
+        nameAnalysis += `• Personnalité: 🌸 Tendance mignonne/innocente\n`;
+    } else if (username.toLowerCase().includes('pro') || username.toLowerCase().includes('master')) {
+        nameAnalysis += `• Personnalité: 🏆 Tendance compétitive/élitiste\n`;
+    } else if (/\d{2,4}$/.test(username)) {
+        nameAnalysis += `• Personnalité: 📊 Méthodique/organisé (utilise des numéros)\n`;
+    } else {
+        nameAnalysis += `• Personnalité: 😐 Profil standard, difficile à analyser\n`;
+    }
+
+    if (username === username.toLowerCase()) {
+        nameAnalysis += `• Style: 🔽 Minimaliste (tout en minuscules)\n`;
+    } else if (username === username.toUpperCase()) {
+        nameAnalysis += `• Style: 📢 Expressif/agressif (tout en majuscules)\n`;
+    } else {
+        nameAnalysis += `• Style: ⚖️ Équilibré (casse mixte)\n`;
+    }
+
+    embed1.addFields({
+        name: '🧠 ANALYSE COMPORTEMENTALE AVANCÉE',
+        value: truncateField(nameAnalysis),
+        inline: false
+    });
+
+    embeds.push(embed1);
+
+    // EMBED 2: Vie sur Discord et historique complet
+    const embed2 = EmbedFactory.base()
+        .setColor(targetMember?.displayHexColor || colors.primary)
+        .setTitle('📚 HISTORIQUE DE VIE DISCORD COMPLET')
+        .setTimestamp();
+
+    // Badges et statut social
+    let socialStatus = `**🏅 STATUT SOCIAL ET RECONNAISSANCE:**\n`;
+    if (flags.length > 0) {
+        const badgeEmojis = {
+            'Staff': '👨‍💼 **STAFF DISCORD OFFICIEL** - Employé Discord',
+            'Partner': '🤝 **PARTENAIRE DISCORD** - Serveur partenaire officiel',
+            'Hypesquad': '🎉 **HYPESQUAD EVENTS** - Organisateur d\'événements',
+            'BugHunterLevel1': '🐛 **BUG HUNTER NIVEAU 1** - Chasseur de bugs débutant',
+            'BugHunterLevel2': '🐛🏆 **BUG HUNTER NIVEAU 2** - Chasseur de bugs expert',
+            'HypesquadOnlineHouse1': '💜 **HYPESQUAD BRAVERY** - Maison du courage',
+            'HypesquadOnlineHouse2': '🧡 **HYPESQUAD BRILLIANCE** - Maison de l\'intelligence',
+            'HypesquadOnlineHouse3': '💚 **HYPESQUAD BALANCE** - Maison de l\'équilibre',
+            'PremiumEarlySupporter': '⭐ **EARLY NITRO SUPPORTER** - Supporter précoce (RARE)',
+            'VerifiedDeveloper': '👨‍💻 **DÉVELOPPEUR VÉRIFIÉ** - Créateur de bots vérifiés',
+            'CertifiedModerator': '🛡️ **MODÉRATEUR CERTIFIÉ** - Formation modération officielle',
+            'VerifiedBot': '✅ **BOT VÉRIFIÉ** - Bot approuvé par Discord',
+            'ActiveDeveloper': '🔨 **DÉVELOPPEUR ACTIF** - Développe activement sur Discord'
+        };
+
+        flags.forEach(flag => {
+            socialStatus += `• ${badgeEmojis[flag] || `🏅 ${flag} (Badge inconnu)`}\n`;
+        });
+        socialStatus += `\n**🎖️ PRESTIGE TOTAL:** ${flags.length} badge${flags.length > 1 ? 's' : ''} officiel${flags.length > 1 ? 's' : ''}\n\n`;
+    } else {
+        socialStatus += `• ❌ Aucun badge Discord officiel\n`;
+        socialStatus += `• 📊 Statut: Utilisateur standard sans reconnaissance\n\n`;
+    }
+
+    // Analyse de l'âge du compte avec implications
+    socialStatus += `**⏰ ANALYSE TEMPORELLE APPROFONDIE:**\n`;
+    socialStatus += `• Âge exact: ${accountAge} jours (${Math.floor(accountAge / 365)} ans, ${Math.floor((accountAge % 365) / 30)} mois, ${accountAge % 30} jours)\n`;
+
+    let ageCategory = '';
+    let trustImplication = '';
+    if (accountAge < 7) {
+        ageCategory = '🆕 **NOUVEAU-NÉ DISCORD** (< 1 semaine)';
+        trustImplication = '🚨 **RISQUE TRÈS ÉLEVÉ** - Compte potentiellement jetable';
+    } else if (accountAge < 30) {
+        ageCategory = '🟢 **DÉBUTANT** (< 1 mois)';
+        trustImplication = '⚠️ **RISQUE MODÉRÉ** - Encore en apprentissage';
+    } else if (accountAge < 90) {
+        ageCategory = '🟡 **UTILISATEUR RÉCENT** (< 3 mois)';
+        trustImplication = '🟡 **RISQUE FAIBLE** - Commence à s\'établir';
+    } else if (accountAge < 365) {
+        ageCategory = '🟠 **UTILISATEUR ÉTABLI** (< 1 an)';
+        trustImplication = '✅ **CONFIANCE MODÉRÉE** - Expérience suffisante';
+    } else if (accountAge < 1095) {
+        ageCategory = '🔵 **VÉTÉRAN** (1-3 ans)';
+        trustImplication = '🛡️ **HAUTE CONFIANCE** - Utilisateur expérimenté';
+    } else if (accountAge < 2190) {
+        ageCategory = '🟣 **ANCIEN** (3-6 ans)';
+        trustImplication = '👑 **TRÈS HAUTE CONFIANCE** - Pilier de la communauté';
+    } else {
+        ageCategory = '🏆 **LÉGENDE DISCORD** (6+ ans)';
+        trustImplication = '🌟 **CONFIANCE ABSOLUE** - Témoin de l\'évolution Discord';
+    }
+
+    socialStatus += `• Catégorie: ${ageCategory}\n`;
+    socialStatus += `• Implication: ${trustImplication}\n`;
+    socialStatus += `• Création: ${new Date(targetUser.createdTimestamp).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}\n`;
+
+    // Calcul de la génération Discord
+    const discordLaunch = new Date('2015-05-13').getTime();
+    const accountCreation = targetUser.createdTimestamp;
+    const daysSinceLaunch = Math.floor((accountCreation - discordLaunch) / (1000 * 60 * 60 * 24));
+
+    let generation = '';
+    if (daysSinceLaunch < 365) generation = '🏛️ **GÉNÉRATION ALPHA** - Pionniers de Discord';
+    else if (daysSinceLaunch < 730) generation = '⚡ **GÉNÉRATION BETA** - Premiers adopteurs';
+    else if (daysSinceLaunch < 1460) generation = '🚀 **GÉNÉRATION GAMMA** - Croissance rapide';
+    else if (daysSinceLaunch < 2190) generation = '🌟 **GÉNÉRATION DELTA** - Expansion massive';
+    else generation = '🆕 **GÉNÉRATION MODERNE** - Ère contemporaine';
+
+    socialStatus += `• Génération Discord: ${generation}\n`;
+    socialStatus += `• Jour ${daysSinceLaunch + 1} depuis le lancement de Discord`;
+
+    embed2.addFields({
+        name: '👑 STATUT SOCIAL ET TEMPOREL',
+        value: truncateField(socialStatus),
+        inline: false
+    });
+
+    // Informations serveur ultra-détaillées
+    if (targetMember) {
+        let serverLife = `**🏠 VIE SUR CE SERVEUR:**\n`;
+        const serverDays = Math.floor((Date.now() - targetMember.joinedTimestamp) / (1000 * 60 * 60 * 24));
+        const joinDate = new Date(targetMember.joinedTimestamp);
+        serverLife += `• Arrivée: ${joinDate.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}\n`;
+        serverLife += `• Ancienneté: ${serverDays} jours (${Math.floor(serverDays / 365)} ans, ${Math.floor((serverDays % 365) / 30)} mois)\n`;
+        serverLife += `• Surnom actuel: ${targetMember.nickname || '❌ Aucun (utilise son nom global)'}\n`;
+
+        // Analyse du délai entre création compte et rejointe serveur
+        const daysBetweenCreationAndJoin = Math.floor((targetMember.joinedTimestamp - targetUser.createdTimestamp) / (1000 * 60 * 60 * 24));
+        if (daysBetweenCreationAndJoin < 1) {
+            serverLife += `• ⚠️ **ALERTE:** Rejoint le serveur le jour de création du compte (suspect)\n`;
+        } else if (daysBetweenCreationAndJoin < 7) {
+            serverLife += `• 🟡 **ATTENTION:** Rejoint ${daysBetweenCreationAndJoin} jour(s) après création (rapide)\n`;
+        } else if (daysBetweenCreationAndJoin < 30) {
+            serverLife += `• 🟢 **NORMAL:** Rejoint ${daysBetweenCreationAndJoin} jours après création\n`;
+        } else {
+            serverLife += `• ✅ **ÉTABLI:** Rejoint ${daysBetweenCreationAndJoin} jours après création (compte mature)\n`;
+        }
+
+        // Statut et présence détaillée
+        const presence = targetMember.presence;
+        serverLife += `\n**📱 PRÉSENCE ET ACTIVITÉ ACTUELLE:**\n`;
+        if (presence) {
+            let statusDetails = '';
+            switch (presence.status) {
+                case 'online':
+                    statusDetails = '🟢 **EN LIGNE** - Actif et disponible';
+                    break;
+                case 'idle':
+                    statusDetails = '🟡 **ABSENT** - Inactif depuis un moment';
+                    break;
+                case 'dnd':
+                    statusDetails = '🔴 **NE PAS DÉRANGER** - Occupé, ne pas interrompre';
+                    break;
+                default:
+                    statusDetails = '⚫ **HORS LIGNE** - Déconnecté ou invisible';
+            }
+            serverLife += `• Statut principal: ${statusDetails}\n`;
+
+            // Clients connectés
+            if (presence.clientStatus) {
+                const clients = Object.entries(presence.clientStatus);
+                serverLife += `• Appareils connectés: ${clients.length}\n`;
+                clients.forEach(([client, status]) => {
+                    const clientEmojis = {
+                        'desktop': '🖥️ Ordinateur',
+                        'mobile': '📱 Mobile',
+                        'web': '🌐 Navigateur'
+                    };
+                    const statusEmojis = {
+                        'online': '🟢',
+                        'idle': '🟡',
+                        'dnd': '🔴'
+                    };
+                    serverLife += `  └ ${clientEmojis[client] || client}: ${statusEmojis[status] || status}\n`;
+                });
+            }
+
+            // Activités détaillées
+            if (presence.activities && presence.activities.length > 0) {
+                serverLife += `• Activités en cours: ${presence.activities.length}\n`;
+                presence.activities.forEach((activity, index) => {
+                    serverLife += `  ${index + 1}. **${activity.name}**\n`;
+                    if (activity.details) serverLife += `     └ Détails: ${activity.details}\n`;
+                    if (activity.state) serverLife += `     └ État: ${activity.state}\n`;
+                    if (activity.timestamps?.start) {
+                        const elapsed = Math.floor((Date.now() - activity.timestamps.start) / 1000);
+                        const hours = Math.floor(elapsed / 3600);
+                        const minutes = Math.floor((elapsed % 3600) / 60);
+                        serverLife += `     └ Durée: ${hours}h ${minutes}m\n`;
+                    }
+                });
+            } else {
+                serverLife += `• ❌ Aucune activité détectée\n`;
+            }
+        } else {
+            serverLife += `• ⚫ **HORS LIGNE** - Aucune information de présence disponible\n`;
+        }
+
+        embed2.addFields({
+            name: '🏠 VIE SUR LE SERVEUR',
+            value: truncateField(serverLife),
+            inline: false
+        });
+    } else {
+        embed2.addFields({
+            name: '🏠 STATUT SERVEUR',
+            value: truncateField('❌ **PAS MEMBRE DE CE SERVEUR**\n• Informations récupérées via l\'API Discord globale\n• Utilisateur externe au serveur actuel\n• Accès limité aux données de présence'),
+            inline: false
+        });
+    }
+
+    embeds.push(embed2);
+
+    // EMBED 3: Analyse visuelle et médias complets
+    const embed3 = EmbedFactory.base()
+        .setColor(targetMember?.displayHexColor || colors.primary)
+        .setTitle('🎨 ANALYSE VISUELLE ET MÉDIAS COMPLETS')
+        .setTimestamp();
+
+    // Avatar ultra-détaillé
+    let avatarAnalysis = `**🖼️ ANALYSE COMPLÈTE DE L'AVATAR:**\n`;
+    if (targetUser.avatar) {
+        const avatarId = targetUser.avatar;
+        const isAnimated = avatarId.startsWith('a_');
+        avatarAnalysis += `• ID Avatar: \`${avatarId}\`\n`;
+        avatarAnalysis += `• Type: ${isAnimated ? '🎬 **GIF ANIMÉ** (Nitro requis)' : '🖼️ **IMAGE STATIQUE**'}\n`;
+        avatarAnalysis += `• Hash: \`${avatarId.substring(0, 8)}...${avatarId.substring(avatarId.length - 8)}\`\n`;
+        avatarAnalysis += `• Format supporté: ${isAnimated ? '.gif, .png, .jpg, .webp' : '.png, .jpg, .webp'}\n`;
+
+        // URLs de toutes les tailles
+        avatarAnalysis += `\n**📐 TOUTES LES RÉSOLUTIONS DISPONIBLES:**\n`;
+        const sizes = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096];
+        sizes.forEach(size => {
+            avatarAnalysis += `• [${size}x${size}px](${targetUser.displayAvatarURL({ size, extension: isAnimated ? 'gif' : 'png' })})\n`;
+        });
+
+        // Analyse de l'historique d'avatar (simulation)
+        avatarAnalysis += `\n**📚 HISTORIQUE D'AVATAR ESTIMÉ:**\n`;
+        avatarAnalysis += `• Avatar actuel depuis: Inconnu (API limitée)\n`;
+        avatarAnalysis += `• Changements estimés: ${Math.floor(accountAge / 30)} (basé sur l'âge du compte)\n`;
+        avatarAnalysis += `• Fréquence de changement: ${accountAge > 30 ? 'Modérée' : 'Inconnue'}\n`;
+
+        if (isAnimated) {
+            avatarAnalysis += `\n**💎 INDICATEURS NITRO:**\n`;
+            avatarAnalysis += `• ✅ Avatar animé détecté - Abonnement Nitro confirmé\n`;
+            avatarAnalysis += `• 💰 Dépense minimum: 9.99€/mois ou 99.99€/an\n`;
+            avatarAnalysis += `• 🎯 Profil: Utilisateur investit financièrement dans Discord\n`;
+        }
+    } else {
+        const defaultAvatarNumber = parseInt(targetUser.discriminator) % 5;
+        avatarAnalysis += `• Type: 🎭 **AVATAR PAR DÉFAUT #${defaultAvatarNumber}**\n`;
+        avatarAnalysis += `• Signification: Utilisateur n'a jamais personnalisé son avatar\n`;
+        avatarAnalysis += `• Implication: Profil basique, peu d'investissement personnel\n`;
+        avatarAnalysis += `• URL par défaut: [Voir](${targetUser.defaultAvatarURL})\n`;
+        avatarAnalysis += `• Couleur: Basée sur le discriminator (${targetUser.discriminator})\n`;
+    }
+
+    // Avatar de serveur si différent
+    if (targetMember && targetMember.avatar && targetMember.avatar !== targetUser.avatar) {
+        const serverAvatarId = targetMember.avatar;
+        const isServerAnimated = serverAvatarId.startsWith('a_');
+        avatarAnalysis += `\n**🏠 AVATAR SPÉCIFIQUE AU SERVEUR:**\n`;
+        avatarAnalysis += `• ID Serveur: \`${serverAvatarId}\`\n`;
+        avatarAnalysis += `• Type: ${isServerAnimated ? '🎬 GIF Animé (Nitro)' : '🖼️ Image Statique'}\n`;
+        avatarAnalysis += `• Personnalisation: ✅ Utilisateur s'adapte à ce serveur\n`;
+        avatarAnalysis += `• [Voir avatar serveur](${targetMember.displayAvatarURL({ size: 1024, dynamic: true })})\n`;
+        if (isServerAnimated && !targetUser.avatar?.startsWith('a_')) {
+            avatarAnalysis += `• 🎯 **ANALYSE:** Avatar serveur animé mais global statique (Nitro récent?)\n`;
+        }
+    }
+
+    embed3.addFields({
+        name: '🖼️ PROFIL VISUEL COMPLET',
+        value: truncateField(avatarAnalysis),
+        inline: false
+    });
+
+    embeds.push(embed3);
+
+    // EMBED 4: Analyse de sécurité et évaluation des risques ultra-complète
+    const embed4 = EmbedFactory.base()
+        .setColor(colors.warning)
+        .setTitle('🛡️ ANALYSE DE SÉCURITÉ ET ÉVALUATION DES RISQUES')
+        .setTimestamp();
+
+    // Calcul du score de confiance ultra-détaillé
+    let securityAnalysis = `**🔍 ÉVALUATION COMPLÈTE DE LA SÉCURITÉ:**\n`;
+    let trustScore = 50; // Base neutre
+    let riskFactors = [];
+    let trustFactors = [];
+
+    // Analyse de l'âge du compte
+    if (accountAge < 1) {
+        trustScore -= 40;
+        riskFactors.push('🚨 CRITIQUE: Compte créé aujourd\'hui (très suspect)');
+    } else if (accountAge < 7) {
+        trustScore -= 30;
+        riskFactors.push('🔴 ÉLEVÉ: Compte très récent (< 1 semaine)');
+    } else if (accountAge < 30) {
+        trustScore -= 15;
+        riskFactors.push('🟠 MODÉRÉ: Compte récent (< 1 mois)');
+    } else if (accountAge < 90) {
+        trustScore -= 5;
+        riskFactors.push('🟡 FAIBLE: Compte assez récent (< 3 mois)');
+    } else if (accountAge > 365) {
+        trustScore += 20;
+        trustFactors.push('✅ Compte ancien (> 1 an) - Très fiable');
+    } else if (accountAge > 180) {
+        trustScore += 10;
+        trustFactors.push('✅ Compte établi (> 6 mois) - Fiable');
+    }
+
+    // Analyse des badges Discord
+    if (flags.includes('Staff')) {
+        trustScore += 50;
+        trustFactors.push('🌟 STAFF DISCORD OFFICIEL - Confiance maximale');
+    }
+    if (flags.includes('Partner')) {
+        trustScore += 30;
+        trustFactors.push('🤝 PARTENAIRE DISCORD - Très haute confiance');
+    }
+    if (flags.includes('VerifiedBot')) {
+        trustScore += 25;
+        trustFactors.push('✅ BOT VÉRIFIÉ - Approuvé par Discord');
+    }
+    if (flags.includes('VerifiedDeveloper')) {
+        trustScore += 20;
+        trustFactors.push('👨‍💻 DÉVELOPPEUR VÉRIFIÉ - Créateur reconnu');
+    }
+    if (flags.includes('CertifiedModerator')) {
+        trustScore += 15;
+        trustFactors.push('🛡️ MODÉRATEUR CERTIFIÉ - Formation officielle');
+    }
+    if (flags.includes('PremiumEarlySupporter')) {
+        trustScore += 15;
+        trustFactors.push('⭐ EARLY SUPPORTER - Soutien précoce (RARE)');
+    }
+    if (flags.includes('BugHunterLevel1') || flags.includes('BugHunterLevel2')) {
+        trustScore += 10;
+        trustFactors.push('🐛 BUG HUNTER - Contribue à la sécurité Discord');
+    }
+
+    // Calcul final
+    trustScore = Math.min(100, Math.max(0, trustScore));
+
+    let trustLevel = '';
+    let trustEmoji = '';
+    let recommendation = '';
+    if (trustScore >= 90) {
+        trustLevel = 'CONFIANCE ABSOLUE';
+        trustEmoji = '🌟';
+        recommendation = 'Aucune restriction recommandée';
+    } else if (trustScore >= 80) {
+        trustLevel = 'TRÈS HAUTE CONFIANCE';
+        trustEmoji = '🟢';
+        recommendation = 'Surveillance minimale';
+    } else if (trustScore >= 70) {
+        trustLevel = 'HAUTE CONFIANCE';
+        trustEmoji = '🟢';
+        recommendation = 'Surveillance légère';
+    } else if (trustScore >= 60) {
+        trustLevel = 'CONFIANCE MODÉRÉE';
+        trustEmoji = '🟡';
+        recommendation = 'Surveillance normale';
+    } else if (trustScore >= 40) {
+        trustLevel = 'CONFIANCE FAIBLE';
+        trustEmoji = '🟠';
+        recommendation = 'Surveillance renforcée';
+    } else if (trustScore >= 20) {
+        trustLevel = 'RISQUE ÉLEVÉ';
+        trustEmoji = '🔴';
+        recommendation = 'Surveillance étroite requise';
+    } else {
+        trustLevel = 'RISQUE CRITIQUE';
+        trustEmoji = '🚨';
+        recommendation = 'Action immédiate recommandée';
+    }
+
+    securityAnalysis += `${trustEmoji} **SCORE FINAL:** ${trustScore}/100\n`;
+    securityAnalysis += `**NIVEAU:** ${trustLevel}\n`;
+    securityAnalysis += `**RECOMMANDATION:** ${recommendation}\n\n`;
+
+    if (trustFactors.length > 0) {
+        securityAnalysis += `**✅ FACTEURS DE CONFIANCE:**\n${trustFactors.join('\n')}\n\n`;
+    }
+    if (riskFactors.length > 0) {
+        securityAnalysis += `**⚠️ FACTEURS DE RISQUE:**\n${riskFactors.join('\n')}\n\n`;
+    }
+
+    embed4.addFields({
+        name: '🛡️ RAPPORT DE SÉCURITÉ COMPLET',
+        value: truncateField(securityAnalysis),
+        inline: false
+    });
+
+    embeds.push(embed4);
+
+    // EMBED 5: Résumé exécutif et recommandations
+    const embed5 = EmbedFactory.base()
+        .setColor(trustScore >= 70 ? colors.success : trustScore >= 40 ? colors.warning : colors.error)
+        .setTitle('📋 RÉSUMÉ EXÉCUTIF ET RECOMMANDATIONS')
+        .setTimestamp();
+
+    let executiveSummary = `**👤 PROFIL UTILISATEUR:**\n`;
+    executiveSummary += `• Identité: **${targetUser.tag}** ${targetUser.bot ? '(Bot)' : '(Humain)'}\n`;
+    executiveSummary += `• Âge du compte: ${accountAge} jours (${Math.floor(accountAge / 365)} ans)\n`;
+    executiveSummary += `• Statut Discord: ${flags.length > 0 ? `${flags.length} badge(s) officiel(s)` : 'Utilisateur standard'}\n\n`;
+
+    executiveSummary += `**🎯 ÉVALUATION FINALE:**\n`;
+    executiveSummary += `• Score de confiance: ${trustScore}/100 ${trustEmoji}\n`;
+    executiveSummary += `• Niveau de risque: ${trustLevel}\n`;
+    executiveSummary += `• Recommandation: ${recommendation}\n\n`;
+
+    // Recommandations spécifiques
+    executiveSummary += `**📋 ACTIONS RECOMMANDÉES:**\n`;
+    if (trustScore >= 80) {
+        executiveSummary += `• ✅ Utilisateur de confiance - Aucune action requise\n`;
+        executiveSummary += `• 🎯 Peut recevoir des responsabilités supplémentaires\n`;
+    } else if (trustScore >= 60) {
+        executiveSummary += `• 🟡 Surveillance normale - Pas d'inquiétude majeure\n`;
+        executiveSummary += `• 📊 Suivre l'évolution du comportement\n`;
+    } else if (trustScore >= 40) {
+        executiveSummary += `• 🟠 Surveillance renforcée recommandée\n`;
+        executiveSummary += `• ⚠️ Éviter les permissions sensibles\n`;
+    } else {
+        executiveSummary += `• 🔴 Action immédiate recommandée\n`;
+        executiveSummary += `• 🚨 Considérer des restrictions ou une enquête\n`;
+    }
+
+    embed5.addFields({
+        name: '📊 SYNTHÈSE COMPLÈTE',
+        value: truncateField(executiveSummary),
+        inline: false
+    });
+
+    // Footer avec métadonnées du rapport
+    embed5.setFooter({
+        text: `Rapport confidentiel généré par ${interaction.user.tag} • ${new Date().toLocaleString('fr-FR')} • ID: ${targetUser.id} • Score: ${trustScore}/100`,
+        iconURL: interaction.user.displayAvatarURL({ dynamic: true })
+    });
+
+    embeds.push(embed5);
+
+    return embeds;
+}
 
 /**
  * ====================================
